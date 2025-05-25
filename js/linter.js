@@ -59,106 +59,65 @@ class JSONLinter {
     }
 
     /**
-     * Format/prettify JSON string
-     * @param {string} jsonString - The JSON string to format
-     * @param {number} indent - Number of spaces for indentation (default: 2)
-     * @returns {Object} - Formatting result
+     * Format JSON with proper indentation
      */
     format(jsonString, indent = 2) {
-        const validation = this.validate(jsonString);
-        
-        if (!validation.isValid) {
-            return {
-                success: false,
-                formatted: '',
-                errors: validation.errors
-            };
-        }
-
         try {
-            this.formatted = JSON.stringify(validation.data, null, indent);
+            if (!jsonString || !jsonString.trim()) {
+                return {
+                    success: false,
+                    errors: ['Input is empty']
+                };
+            }
+
+            const parsed = JSON.parse(jsonString);
+            const formatted = JSON.stringify(parsed, null, indent);
+            
             return {
                 success: true,
-                formatted: this.formatted,
+                formatted: formatted,
                 errors: []
             };
         } catch (error) {
             return {
                 success: false,
-                formatted: '',
-                errors: [`Formatting error: ${error.message}`]
+                errors: [this.formatError(error)],
+                formatted: null
             };
         }
     }
 
     /**
-     * Minify JSON string (remove all unnecessary whitespace)
-     * @param {string} jsonString - The JSON string to minify
-     * @returns {Object} - Minification result
+     * Compress/minify JSON by removing whitespace
      */
-    minify(jsonString) {
-        const validation = this.validate(jsonString);
-        
-        if (!validation.isValid) {
-            return {
-                success: false,
-                minified: '',
-                errors: validation.errors
-            };
-        }
-
+    compress(jsonString) {
         try {
-            const minified = JSON.stringify(validation.data);
+            if (!jsonString || !jsonString.trim()) {
+                return {
+                    success: false,
+                    errors: ['Input is empty']
+                };
+            }
+
+            const parsed = JSON.parse(jsonString);
+            const compressed = JSON.stringify(parsed);
+            
             return {
                 success: true,
-                minified: minified,
+                compressed: compressed,
                 errors: []
             };
         } catch (error) {
             return {
                 success: false,
-                minified: '',
-                errors: [`Minification error: ${error.message}`]
+                errors: [this.formatError(error)],
+                compressed: null
             };
         }
     }
 
     /**
-     * Get JSON statistics
-     * @param {string} jsonString - The JSON string to analyze
-     * @returns {Object} - Statistics about the JSON
-     */
-    getStats(jsonString) {
-        const validation = this.validate(jsonString);
-        
-        if (!validation.isValid) {
-            return {
-                size: jsonString.length,
-                sizeFormatted: this.formatBytes(jsonString.length),
-                characters: jsonString.length,
-                lines: jsonString.split('\n').length,
-                valid: false
-            };
-        }
-
-        const formatted = this.format(jsonString);
-        const minified = this.minify(jsonString);
-        
-        return {
-            size: jsonString.length,
-            sizeFormatted: this.formatBytes(jsonString.length),
-            characters: jsonString.length,
-            lines: jsonString.split('\n').length,
-            formattedSize: formatted.success ? formatted.formatted.length : 0,
-            minifiedSize: minified.success ? minified.minified.length : 0,
-            valid: true,
-            type: this.getJSONType(validation.data),
-            depth: this.getMaxDepth(validation.data)
-        };
-    }
-
-    /**
-     * Parse error message to provide better user feedback
+     * Parse and format error messages for better user experience
      * @param {Error} error - The error object
      * @param {string} jsonString - The original JSON string
      * @returns {string} - Formatted error message
@@ -179,17 +138,64 @@ class JSONLinter {
             let location = '';
             if (line && column) {
                 location = ` at line ${line}, column ${column}`;
+            } else if (line) {
+                location = ` at line ${line}`;
             } else if (position) {
-                const lines = jsonString.substring(0, position).split('\n');
-                const lineNum = lines.length;
-                const colNum = lines[lines.length - 1].length + 1;
-                location = ` at line ${lineNum}, column ${colNum}`;
+                const lineNumber = this.getLineFromPosition(jsonString, position);
+                location = ` at line ${lineNumber}`;
             }
             
             return `${message}${location}`;
         }
         
         return message;
+    }
+
+    /**
+     * Format error for consistent display
+     */
+    formatError(error) {
+        return error.message || 'Unknown error occurred';
+    }
+
+    /**
+     * Convert character position to line number
+     */
+    getLineFromPosition(text, position) {
+        if (position <= 0) return 1;
+        
+        const beforeError = text.substring(0, position);
+        const lines = beforeError.split('\n');
+        return lines.length;
+    }
+
+    /**
+     * Get JSON statistics
+     * @param {string} jsonString - The JSON string to analyze
+     * @returns {Object} - Statistics about the JSON
+     */
+    getStats(jsonString) {
+        if (!jsonString || jsonString.trim() === '') {
+            return {
+                size: 0,
+                sizeFormatted: '0 Bytes',
+                characters: 0,
+                lines: 0,
+                valid: false
+            };
+        }
+
+        const lines = jsonString.split('\n').length;
+        const characters = jsonString.length;
+        const bytes = new Blob([jsonString]).size;
+        
+        return {
+            size: bytes,
+            sizeFormatted: this.formatBytes(bytes),
+            characters: characters,
+            lines: lines,
+            valid: this.validate(jsonString).isValid
+        };
     }
 
     /**

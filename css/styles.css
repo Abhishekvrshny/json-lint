@@ -213,6 +213,83 @@ body {
     border-left: 2px solid var(--primary-color);
 }
 
+/* Custom JSON syntax highlighting for better contrast */
+/* Light theme JSON syntax highlighting */
+.CodeMirror .cm-property {
+    color: #0066cc !important; /* Blue for property names/keys */
+    font-weight: 600;
+}
+
+.CodeMirror .cm-string {
+    color: #008000 !important; /* Green for string values */
+}
+
+.CodeMirror .cm-number {
+    color: #d73a49 !important; /* Red for numbers */
+    font-weight: 500;
+}
+
+.CodeMirror .cm-atom {
+    color: #e36209 !important; /* Orange for true/false/null */
+    font-weight: 500;
+}
+
+.CodeMirror .cm-punctuation {
+    color: #6f42c1 !important; /* Purple for brackets, braces, commas */
+}
+
+.CodeMirror .cm-bracket {
+    color: #6f42c1 !important; /* Purple for brackets */
+}
+
+/* Dark theme JSON syntax highlighting */
+[data-theme="dark"] .CodeMirror .cm-property {
+    color: #79c0ff !important; /* Light blue for property names/keys */
+    font-weight: 600;
+}
+
+[data-theme="dark"] .CodeMirror .cm-string {
+    color: #a5d6ff !important; /* Light green for string values */
+}
+
+[data-theme="dark"] .CodeMirror .cm-number {
+    color: #ff7b72 !important; /* Light red for numbers */
+    font-weight: 500;
+}
+
+[data-theme="dark"] .CodeMirror .cm-atom {
+    color: #ffa657 !important; /* Light orange for true/false/null */
+    font-weight: 500;
+}
+
+[data-theme="dark"] .CodeMirror .cm-punctuation {
+    color: #d2a8ff !important; /* Light purple for brackets, braces, commas */
+}
+
+[data-theme="dark"] .CodeMirror .cm-bracket {
+    color: #d2a8ff !important; /* Light purple for brackets */
+}
+
+/* Additional styling for better readability */
+.CodeMirror .cm-keyword {
+    color: #d73a49 !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .CodeMirror .cm-keyword {
+    color: #ff7b72 !important;
+    font-weight: 600;
+}
+
+/* Error line highlighting */
+.CodeMirror .error-line {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+[data-theme="dark"] .CodeMirror .error-line {
+    background-color: rgba(248, 113, 113, 0.2) !important;
+}
+
 /* Status bar */
 .status-bar {
     display: flex;

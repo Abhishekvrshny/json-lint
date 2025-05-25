@@ -105,6 +105,12 @@ class UIManager {
             validateBtn.addEventListener('click', () => this.validateJSON());
         }
 
+        // Compress button
+        const compressBtn = document.getElementById('compressBtn');
+        if (compressBtn) {
+            compressBtn.addEventListener('click', () => this.compressJSON());
+        }
+
         // Copy button
         const copyBtn = document.getElementById('copyBtn');
         if (copyBtn) {
@@ -257,6 +263,7 @@ class UIManager {
         this.setInputValue('');
         this.setOutputValue('');
         this.hideErrorPanel();
+        this.clearErrorHighlights();
         this.updateInputStatus('');
         this.updateOutputStatus('');
         this.updateInputStats();
@@ -281,11 +288,13 @@ class UIManager {
             this.setOutputValue(result.formatted);
             this.updateOutputStatus('✓ Valid JSON', 'valid');
             this.hideErrorPanel();
+            this.clearErrorHighlights();
             this.updateOutputStats();
             this.showToast('JSON formatted successfully', 'success');
         } else {
             this.showErrors(result.errors);
             this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+            this.highlightErrorLines(result.errors, input);
             this.setOutputValue('');
         }
     }
@@ -301,13 +310,38 @@ class UIManager {
         if (result.isValid) {
             this.updateInputStatus('✓ Valid JSON', 'valid');
             this.hideErrorPanel();
+            this.clearErrorHighlights();
             this.showToast('JSON is valid', 'success');
         } else {
             this.updateInputStatus('✗ Invalid JSON', 'invalid');
             this.showErrors(result.errors);
+            this.highlightErrorLines(result.errors, input);
         }
         
         this.updateInputStats();
+    }
+
+    /**
+     * Compress/minify JSON
+     */
+    compressJSON() {
+        const input = this.getInputValue();
+        const linter = new JSONLinter();
+        const result = linter.compress(input);
+
+        if (result.success) {
+            this.setOutputValue(result.compressed);
+            this.updateOutputStatus('✓ JSON compressed', 'valid');
+            this.hideErrorPanel();
+            this.clearErrorHighlights();
+            this.updateOutputStats();
+            this.showToast('JSON compressed successfully', 'success');
+        } else {
+            this.showErrors(result.errors);
+            this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+            this.highlightErrorLines(result.errors, input);
+            this.setOutputValue('');
+        }
     }
 
     /**
@@ -516,6 +550,119 @@ class UIManager {
      */
     getLineCount(editor) {
         return editor ? editor.lineCount() : 0;
+    }
+
+    /**
+     * Highlight error lines in the input editor
+     */
+    highlightErrorLines(errors, jsonString) {
+        if (!this.inputEditor || !errors || errors.length === 0) return;
+
+        // Clear previous error highlights
+        this.clearErrorHighlights();
+
+        errors.forEach(error => {
+            const lineNumber = this.extractLineNumber(error, jsonString);
+            if (lineNumber > 0) {
+                this.highlightLine(this.inputEditor, lineNumber);
+            }
+        });
+    }
+
+    /**
+     * Clear all error highlights from the input editor
+     */
+    clearErrorHighlights() {
+        if (!this.inputEditor) return;
+
+        // Remove error-line class from all lines
+        this.inputEditor.eachLine((line) => {
+            this.inputEditor.removeLineClass(line, 'background', 'error-line');
+        });
+    }
+
+    /**
+     * Extract line number from error message
+     */
+    extractLineNumber(errorMessage, jsonString) {
+        // Try to extract line number from various error message formats
+        const lineMatches = [
+            /line (\d+)/i,
+            /at line (\d+)/i,
+            /on line (\d+)/i,
+            /line:?\s*(\d+)/i
+        ];
+
+        for (const regex of lineMatches) {
+            const match = errorMessage.match(regex);
+            if (match) {
+                return parseInt(match[1], 10);
+            }
+        }
+
+        // Try to extract position and convert to line number
+        const positionMatch = errorMessage.match(/position (\d+)/i);
+        if (positionMatch) {
+            const position = parseInt(positionMatch[1], 10);
+            return this.getLineFromPosition(jsonString, position);
+        }
+
+        // If no line number found, try to parse the error and find approximate location
+        return this.findErrorLineByContent(errorMessage, jsonString);
+    }
+
+    /**
+     * Convert character position to line number
+     */
+    getLineFromPosition(text, position) {
+        if (position <= 0) return 1;
+        
+        const beforeError = text.substring(0, position);
+        const lines = beforeError.split('\n');
+        return lines.length;
+    }
+
+    /**
+     * Find error line by analyzing the error content
+     */
+    findErrorLineByContent(errorMessage, jsonString) {
+        // Look for common JSON syntax errors and try to locate them
+        const lines = jsonString.split('\n');
+        
+        // Check for common error patterns
+        if (errorMessage.toLowerCase().includes('unexpected token')) {
+            // Try to find the unexpected token
+            const tokenMatch = errorMessage.match(/unexpected token '?(.)'?/i);
+            if (tokenMatch) {
+                const token = tokenMatch[1];
+                // Find the first occurrence of this token that might be problematic
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (line.includes(token)) {
+                        // Simple heuristic: if it's a structural character in wrong place
+                        if (['{', '}', '[', ']', ',', ':'].includes(token)) {
+                            return i + 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for unterminated strings
+        if (errorMessage.toLowerCase().includes('unterminated string') || 
+            errorMessage.toLowerCase().includes('unexpected end')) {
+            // Find lines with unmatched quotes
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const quotes = (line.match(/"/g) || []).length;
+                if (quotes % 2 !== 0) {
+                    return i + 1;
+                }
+            }
+        }
+
+        // Default to line 1 if we can't determine the error location
+        return 1;
     }
 }
 
