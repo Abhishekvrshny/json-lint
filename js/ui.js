@@ -10,8 +10,12 @@ class UIManager {
         this.autoValidate = true;
         this.debounceTimer = null;
         this.debounceDelay = 500; // ms
+        this.fontSize = 14; // Default font size in pixels
+        this.minFontSize = 10;
+        this.maxFontSize = 24;
         
         this.initializeTheme();
+        this.initializeFontSize();
     }
 
     /**
@@ -69,6 +73,9 @@ class UIManager {
                 gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
             });
         }
+
+        // Apply font size to editors after they're created
+        this.applyFontSize();
     }
 
     /**
@@ -121,6 +128,17 @@ class UIManager {
         const downloadBtn = document.getElementById('downloadBtn');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => this.downloadJSON());
+        }
+
+        // Font size controls
+        const fontSizeIncrease = document.getElementById('fontSizeIncrease');
+        if (fontSizeIncrease) {
+            fontSizeIncrease.addEventListener('click', () => this.increaseFontSize());
+        }
+
+        const fontSizeDecrease = document.getElementById('fontSizeDecrease');
+        if (fontSizeDecrease) {
+            fontSizeDecrease.addEventListener('click', () => this.decreaseFontSize());
         }
 
         // Close error panel
@@ -584,6 +602,79 @@ linter = new JSONLinter();
                 }, 300);
             }
         }, 3000);
+    }
+
+    /**
+     * Initialize font size from localStorage
+     */
+    initializeFontSize() {
+        const savedFontSize = localStorage.getItem('json-lint-font-size');
+        if (savedFontSize) {
+            this.fontSize = parseInt(savedFontSize);
+        }
+        this.applyFontSize();
+    }
+
+    /**
+     * Increase font size
+     */
+    increaseFontSize() {
+        if (this.fontSize < this.maxFontSize) {
+            this.fontSize += 2;
+            this.applyFontSize();
+            this.saveFontSize();
+            this.showToast(`Font size increased to ${this.fontSize}px`, 'success');
+        } else {
+            this.showToast('Maximum font size reached', 'warning');
+        }
+    }
+
+    /**
+     * Decrease font size
+     */
+    decreaseFontSize() {
+        if (this.fontSize > this.minFontSize) {
+            this.fontSize -= 2;
+            this.applyFontSize();
+            this.saveFontSize();
+            this.showToast(`Font size decreased to ${this.fontSize}px`, 'success');
+        } else {
+            this.showToast('Minimum font size reached', 'warning');
+        }
+    }
+
+    /**
+     * Apply font size to editors
+     */
+    applyFontSize() {
+        const fontSizeStyle = `${this.fontSize}px`;
+        
+        // Apply to CodeMirror editors
+        if (this.inputEditor) {
+            this.inputEditor.getWrapperElement().style.fontSize = fontSizeStyle;
+            this.inputEditor.refresh();
+        }
+        if (this.outputEditor) {
+            this.outputEditor.getWrapperElement().style.fontSize = fontSizeStyle;
+            this.outputEditor.refresh();
+        }
+
+        // Apply to fallback textareas (in case CodeMirror isn't loaded)
+        const inputTextarea = document.getElementById('inputEditor');
+        const outputTextarea = document.getElementById('outputEditor');
+        if (inputTextarea) {
+            inputTextarea.style.fontSize = fontSizeStyle;
+        }
+        if (outputTextarea) {
+            outputTextarea.style.fontSize = fontSizeStyle;
+        }
+    }
+
+    /**
+     * Save font size to localStorage
+     */
+    saveFontSize() {
+        localStorage.setItem('json-lint-font-size', this.fontSize.toString());
     }
 }
 
