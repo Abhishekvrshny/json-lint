@@ -14,12 +14,42 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1 class="title">
-                <span class="icon">📋</span>
-                JSON Lint
-            </h1>
+        <header class="compact-header">
+            <div class="header-left">
+                <h1 class="title">
+                    <span class="icon">📋</span>
+                    JSON Lint
+                </h1>
+                <div class="status-info">
+                    <span id="status" class="status"></span>
+                    <span id="size" class="size-info"></span>
+                </div>
+            </div>
             <div class="header-controls">
+                <button id="formatBtn" class="btn btn-primary" title="Format JSON">
+                    <span class="btn-icon">✨</span>
+                </button>
+                <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
+                    <span class="btn-icon">✓</span>
+                </button>
+                <label class="checkbox-container" title="Toggle between compressed and formatted JSON">
+                    <input type="checkbox" id="compressToggle">
+                    <span class="checkbox-label">Compress</span>
+                </label>
+                <div class="divider"></div>
+                <button id="copyBtn" class="btn btn-secondary" title="Copy to clipboard">
+                    <span class="btn-icon">📋</span>
+                </button>
+                <button id="downloadBtn" class="btn btn-secondary" title="Download JSON">
+                    <span class="btn-icon">💾</span>
+                </button>
+                <button id="sampleBtn" class="btn btn-secondary" title="Load sample JSON">
+                    Sample
+                </button>
+                <button id="clearBtn" class="btn btn-secondary" title="Clear input">
+                    Clear
+                </button>
+                <div class="divider"></div>
                 <div class="font-size-controls">
                     <button id="fontSizeDecrease" class="btn btn-icon" title="Decrease font size">
                         <span>−</span>
@@ -31,54 +61,12 @@
                 <button id="themeToggle" class="btn btn-icon" title="Toggle dark/light mode">
                     <span class="theme-icon">🌙</span>
                 </button>
-                <button id="sampleBtn" class="btn btn-secondary" title="Load sample JSON">
-                    Sample
-                </button>
-                <button id="clearBtn" class="btn btn-secondary" title="Clear input">
-                    Clear
-                </button>
             </div>
         </header>
 
         <main class="main-content">
-            <div class="control-panel">
-                <div class="control-group primary-actions">
-                    <button id="formatBtn" class="btn btn-primary" title="Format JSON">
-                        <span class="btn-icon">✨</span>
-                        Format
-                    </button>
-                    <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
-                        <span class="btn-icon">✓</span>
-                        Validate
-                    </button>
-                    <label class="checkbox-container" title="Toggle between compressed and formatted JSON">
-                        <input type="checkbox" id="compressToggle">
-                        <span class="checkbox-label">Compress</span>
-                    </label>
-                </div>
-                <div class="control-group secondary-actions">
-                    <button id="copyBtn" class="btn btn-secondary" title="Copy to clipboard">
-                        <span class="btn-icon">📋</span>
-                        Copy
-                    </button>
-                    <button id="downloadBtn" class="btn btn-secondary" title="Download JSON">
-                        <span class="btn-icon">💾</span>
-                        Download
-                    </button>
-                </div>
-            </div>
-
-            <div class="panel single-panel">
-                <div class="panel-header">
-                    <h2>JSON Editor</h2>
-                    <div class="panel-info">
-                        <span id="status" class="status"></span>
-                        <span id="size" class="size-info"></span>
-                    </div>
-                </div>
-                <div class="editor-container">
-                    <textarea id="jsonEditor" placeholder="Paste your JSON here..."></textarea>
-                </div>
+            <div class="editor-container">
+                <textarea id="jsonEditor" placeholder="Paste your JSON here..."></textarea>
             </div>
         </main>
 
@@ -89,16 +77,6 @@
             </div>
             <div id="errorContent" class="error-content"></div>
         </div>
-
-        <footer class="footer">
-            <p>
-                Made with ❤️ for JSON validation and formatting
-                <span class="separator">•</span>
-                <a href="https://github.com/abhishekvarshney/json-lint" target="_blank" rel="noopener">
-                    View on GitHub
-                </a>
-            </p>
-        </footer>
     </div>
 
     <!-- Toast notification -->
