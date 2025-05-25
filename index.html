@@ -41,49 +41,43 @@
         </header>
 
         <main class="main-content">
-            <div class="panel input-panel">
-                <div class="panel-header">
-                    <h2>Input JSON</h2>
-                    <div class="panel-controls">
-                        <button id="formatBtn" class="btn btn-primary" title="Format JSON">
-                            Format
-                        </button>
-                        <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
-                            Validate
-                        </button>
-                    </div>
+            <div class="control-panel">
+                <div class="control-group primary-actions">
+                    <button id="formatBtn" class="btn btn-primary" title="Format JSON">
+                        <span class="btn-icon">✨</span>
+                        Format
+                    </button>
+                    <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
+                        <span class="btn-icon">✓</span>
+                        Validate
+                    </button>
+                    <label class="checkbox-container" title="Toggle between compressed and formatted JSON">
+                        <input type="checkbox" id="compressToggle">
+                        <span class="checkbox-label">Compress</span>
+                    </label>
                 </div>
-                <div class="editor-container">
-                    <textarea id="inputEditor" placeholder="Paste your JSON here..."></textarea>
-                </div>
-                <div class="status-bar">
-                    <span id="inputStatus" class="status"></span>
-                    <span id="inputSize" class="size-info"></span>
+                <div class="control-group secondary-actions">
+                    <button id="copyBtn" class="btn btn-secondary" title="Copy to clipboard">
+                        <span class="btn-icon">📋</span>
+                        Copy
+                    </button>
+                    <button id="downloadBtn" class="btn btn-secondary" title="Download JSON">
+                        <span class="btn-icon">💾</span>
+                        Download
+                    </button>
                 </div>
             </div>
 
-            <div class="panel output-panel">
+            <div class="panel single-panel">
                 <div class="panel-header">
-                    <h2>Output</h2>
-                    <div class="panel-controls">
-                        <label class="checkbox-container" title="Toggle between compressed and formatted JSON">
-                            <input type="checkbox" id="compressToggle">
-                            <span class="checkbox-label">Compress</span>
-                        </label>
-                        <button id="copyBtn" class="btn btn-secondary" title="Copy to clipboard">
-                            Copy
-                        </button>
-                        <button id="downloadBtn" class="btn btn-secondary" title="Download JSON">
-                            Download
-                        </button>
+                    <h2>JSON Editor</h2>
+                    <div class="panel-info">
+                        <span id="status" class="status"></span>
+                        <span id="size" class="size-info"></span>
                     </div>
                 </div>
                 <div class="editor-container">
-                    <textarea id="outputEditor" readonly placeholder="Formatted JSON will appear here..."></textarea>
-                </div>
-                <div class="status-bar">
-                    <span id="outputStatus" class="status"></span>
-                    <span id="outputSize" class="size-info"></span>
+                    <textarea id="jsonEditor" placeholder="Paste your JSON here..."></textarea>
                 </div>
             </div>
         </main>

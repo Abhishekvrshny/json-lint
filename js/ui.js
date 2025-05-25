@@ -4,8 +4,7 @@
 
 class UIManager {
     constructor() {
-        this.inputEditor = null;
-        this.outputEditor = null;
+        this.jsonEditor = null;
         this.isDarkMode = false;
         this.autoValidate = true;
         this.debounceTimer = null;
@@ -22,19 +21,19 @@ class UIManager {
      * Initialize the UI components
      */
     initialize() {
-        this.setupEditors();
+        this.setupEditor();
         this.bindEvents();
         this.updateThemeIcon();
     }
 
     /**
-     * Setup CodeMirror editors
+     * Setup CodeMirror editor
      */
-    setupEditors() {
-        // Input editor
-        const inputTextarea = document.getElementById('inputEditor');
-        if (inputTextarea && typeof CodeMirror !== 'undefined') {
-            this.inputEditor = CodeMirror.fromTextArea(inputTextarea, {
+    setupEditor() {
+        // Single JSON editor
+        const jsonTextarea = document.getElementById('jsonEditor');
+        if (jsonTextarea && typeof CodeMirror !== 'undefined') {
+            this.jsonEditor = CodeMirror.fromTextArea(jsonTextarea, {
                 mode: 'application/json',
                 theme: this.isDarkMode ? 'material-darker' : 'default',
                 lineNumbers: true,
@@ -54,27 +53,13 @@ class UIManager {
             });
 
             // Auto-validate on input change
-            this.inputEditor.on('change', () => {
+            this.jsonEditor.on('change', () => {
                 this.debounceValidation();
-                this.updateInputStats();
+                this.updateStats();
             });
         }
 
-        // Output editor
-        const outputTextarea = document.getElementById('outputEditor');
-        if (outputTextarea && typeof CodeMirror !== 'undefined') {
-            this.outputEditor = CodeMirror.fromTextArea(outputTextarea, {
-                mode: 'application/json',
-                theme: this.isDarkMode ? 'material-darker' : 'default',
-                lineNumbers: true,
-                lineWrapping: true,
-                readOnly: true,
-                foldGutter: true,
-                gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
-            });
-        }
-
-        // Apply font size to editors after they're created
+        // Apply font size to editor after it's created
         this.applyFontSize();
     }
 
@@ -206,12 +191,9 @@ class UIManager {
     applyTheme() {
         document.documentElement.setAttribute('data-theme', this.isDarkMode ? 'dark' : 'light');
         
-        // Update CodeMirror themes
-        if (this.inputEditor) {
-            this.inputEditor.setOption('theme', this.isDarkMode ? 'material-darker' : 'default');
-        }
-        if (this.outputEditor) {
-            this.outputEditor.setOption('theme', this.isDarkMode ? 'material-darker' : 'default');
+        // Update CodeMirror theme
+        if (this.jsonEditor) {
+            this.jsonEditor.setOption('theme', this.isDarkMode ? 'material-darker' : 'default');
         }
     }
 
@@ -226,38 +208,24 @@ class UIManager {
     }
 
     /**
-     * Get input value from editor
+     * Get value from editor
      */
-    getInputValue() {
-        if (this.inputEditor) {
-            return this.inputEditor.getValue();
+    getValue() {
+        if (this.jsonEditor) {
+            return this.jsonEditor.getValue();
         }
-        const textarea = document.getElementById('inputEditor');
+        const textarea = document.getElementById('jsonEditor');
         return textarea ? textarea.value : '';
     }
 
     /**
-     * Set input value in editor
+     * Set value in editor
      */
-    setInputValue(value) {
-        if (this.inputEditor) {
-            this.inputEditor.setValue(value);
+    setValue(value) {
+        if (this.jsonEditor) {
+            this.jsonEditor.setValue(value);
         } else {
-            const textarea = document.getElementById('inputEditor');
-            if (textarea) {
-                textarea.value = value;
-            }
-        }
-    }
-
-    /**
-     * Set output value in editor
-     */
-    setOutputValue(value) {
-        if (this.outputEditor) {
-            this.outputEditor.setValue(value);
-        } else {
-            const textarea = document.getElementById('outputEditor');
+            const textarea = document.getElementById('jsonEditor');
             if (textarea) {
                 textarea.value = value;
             }
@@ -269,7 +237,7 @@ class UIManager {
      */
     loadSampleJSON() {
         const sampleJSON = JSONLinter.getSampleJSON();
-        this.setInputValue(sampleJSON);
+        this.setValue(sampleJSON);
         this.validateJSON();
         this.showToast('Sample JSON loaded', 'success');
     }
@@ -278,17 +246,14 @@ class UIManager {
      * Clear input editor
      */
     clearInput() {
-        this.setInputValue('');
-        this.setOutputValue('');
+        this.setValue('');
         this.hideErrorPanel();
         this.clearErrorHighlights();
-        this.updateInputStatus('');
-        this.updateOutputStatus('');
-        this.updateInputStats();
-        this.updateOutputStats();
+        this.updateStatus('');
+        this.updateStats();
         
-        if (this.inputEditor) {
-            this.inputEditor.focus();
+        if (this.jsonEditor) {
+            this.jsonEditor.focus();
         }
         
         this.showToast('Input cleared', 'success');
@@ -298,22 +263,21 @@ class UIManager {
      * Format JSON with validation
      */
     formatJSON() {
-        const input = this.getInputValue();
+        const input = this.getValue();
         const linter = new JSONLinter();
         const result = linter.format(input);
 
         if (result.success) {
-            this.setOutputValue(result.formatted);
-            this.updateOutputStatus('✓ Valid JSON', 'valid');
+            this.setValue(result.formatted);
+            this.updateStatus('✓ Valid JSON', 'valid');
             this.hideErrorPanel();
             this.clearErrorHighlights();
-            this.updateOutputStats();
+            this.updateStats();
             this.showToast('JSON formatted successfully', 'success');
         } else {
             this.showErrors(result.errors);
-            this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+            this.updateStatus('✗ Invalid JSON', 'invalid');
             this.highlightErrorLines(result.errors, input);
-            this.setOutputValue('');
         }
     }
 
@@ -321,22 +285,22 @@ class UIManager {
      * Validate JSON without formatting
      */
     validateJSON() {
-        const input = this.getInputValue();
+        const input = this.getValue();
         const linter = new JSONLinter();
         const result = linter.validate(input);
 
         if (result.isValid) {
-            this.updateInputStatus('✓ Valid JSON', 'valid');
+            this.updateStatus('✓ Valid JSON', 'valid');
             this.hideErrorPanel();
             this.clearErrorHighlights();
             this.showToast('JSON is valid', 'success');
         } else {
-            this.updateInputStatus('✗ Invalid JSON', 'invalid');
+            this.updateStatus('✗ Invalid JSON', 'invalid');
             this.showErrors(result.errors);
             this.highlightErrorLines(result.errors, input);
         }
         
-        this.updateInputStats();
+        this.updateStats();
     }
 
     /**
@@ -346,7 +310,7 @@ class UIManager {
         const compressToggle = document.getElementById('compressToggle');
         const isCompressed = compressToggle && compressToggle.checked;
         
-        const input = this.getInputValue();
+        const input = this.getValue();
         if (!input.trim()) {
             this.showToast('No JSON to process', 'error');
             return;
@@ -358,17 +322,16 @@ class UIManager {
             // Compress the JSON
             const result = linter.compress(input);
             if (result.success) {
-                this.setOutputValue(result.compressed);
-                this.updateOutputStatus('✓ JSON compressed', 'valid');
+                this.setValue(result.compressed);
+                this.updateStatus('✓ JSON compressed', 'valid');
                 this.hideErrorPanel();
                 this.clearErrorHighlights();
-                this.updateOutputStats();
+                this.updateStats();
                 this.showToast('JSON compressed', 'success');
             } else {
                 this.showErrors(result.errors);
-                this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+                this.updateStatus('✗ Invalid JSON', 'invalid');
                 this.highlightErrorLines(result.errors, input);
-                this.setOutputValue('');
                 // Uncheck the checkbox if compression failed
                 compressToggle.checked = false;
             }
@@ -376,17 +339,16 @@ class UIManager {
             // Format the JSON (expand)
             const result = linter.format(input);
             if (result.success) {
-                this.setOutputValue(result.formatted);
-                this.updateOutputStatus('✓ JSON formatted', 'valid');
+                this.setValue(result.formatted);
+                this.updateStatus('✓ JSON formatted', 'valid');
                 this.hideErrorPanel();
                 this.clearErrorHighlights();
-                this.updateOutputStats();
+                this.updateStats();
                 this.showToast('JSON formatted', 'success');
             } else {
                 this.showErrors(result.errors);
-                this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+                this.updateStatus('✗ Invalid JSON', 'invalid');
                 this.highlightErrorLines(result.errors, input);
-                this.setOutputValue('');
             }
         }
     }
@@ -404,23 +366,22 @@ class UIManager {
     }
 
     /**
-     * Copy output to clipboard
+     * Copy content to clipboard
      */
     async copyToClipboard() {
-        const output = this.outputEditor ? this.outputEditor.getValue() : 
-                      document.getElementById('outputEditor').value;
+        const content = this.getValue();
         
-        if (!output.trim()) {
+        if (!content.trim()) {
             this.showToast('Nothing to copy', 'error');
             return;
         }
 
         try {
-            await navigator.clipboard.writeText(output);
+            await navigator.clipboard.writeText(content);
             this.showToast('Copied to clipboard', 'success');
         } catch (err) {
             // Fallback for older browsers
-            this.fallbackCopyToClipboard(output);
+            this.fallbackCopyToClipboard(content);
         }
     }
 
@@ -451,19 +412,18 @@ class UIManager {
      * Download JSON as file
      */
     downloadJSON() {
-        const output = this.outputEditor ? this.outputEditor.getValue() : 
-                      document.getElementById('outputEditor').value;
+        const content = this.getValue();
         
-        if (!output.trim()) {
+        if (!content.trim()) {
             this.showToast('Nothing to download', 'error');
             return;
         }
 
-        const blob = new Blob([output], { type: 'application/json' });
+        const blob = new Blob([content], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `formatted-json-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        a.download = `json-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -496,10 +456,10 @@ class UIManager {
     }
 
     /**
-     * Update input status
+     * Update status
      */
-    updateInputStatus(message, type = '') {
-        const statusElement = document.getElementById('inputStatus');
+    updateStatus(message, type = '') {
+        const statusElement = document.getElementById('status');
         if (statusElement) {
             statusElement.textContent = message;
             statusElement.className = `status ${type}`;
@@ -507,50 +467,24 @@ class UIManager {
     }
 
     /**
-     * Update output status
+     * Update statistics
      */
-    updateOutputStatus(message, type = '') {
-        const statusElement = document.getElementById('outputStatus');
-        if (statusElement) {
-            statusElement.textContent = message;
-            statusElement.className = `status ${type}`;
-        }
-    }
-
-    /**
-     * Update input statistics
-     */
-    updateInputStats() {
-        const input = this.getInputValue();
-        const
-linter = new JSONLinter();
-        const stats = linter.getStats(input);
-        
-        const inputSizeElement = document.getElementById('inputSize');
-        if (inputSizeElement) {
-            inputSizeElement.textContent = stats.sizeFormatted;
-        }
-    }
-
-    /**
-     * Update output statistics
-     */
-    updateOutputStats() {
-        const output = this.outputEditor ? this.outputEditor.getValue() : 
-                      document.getElementById('outputEditor').value;
+    updateStats() {
+        const content = this.getValue();
         const linter = new JSONLinter();
-        const stats = linter.getStats(output);
+        const stats = linter.getStats(content);
         
-        const outputSizeElement = document.getElementById('outputSize');
-        if (outputSizeElement) {
-            outputSizeElement.textContent = stats.sizeFormatted;
+        const sizeElement = document.getElementById('size');
+        if (sizeElement) {
+            sizeElement.textContent = stats.sizeFormatted;
         }
     }
 
     /**
-     * Highlight error lines in the input editor
+     * Highlight error lines in the editor
      */
     highlightErrorLines(errors, input) {
+        if (!this.jsonEditor) return;
         
         this.clearErrorHighlights();
         
@@ -558,34 +492,35 @@ linter = new JSONLinter();
             const lineMatch = error.match(/line (\d+)/i);
             if (lineMatch) {
                 const lineNumber = parseInt(lineMatch[1]) - 1; // CodeMirror uses 0-based indexing
-                this.inputEditor.addLineClass(lineNumber, 'background', 'error-line');
+                this.jsonEditor.addLineClass(lineNumber, 'background', 'error-line');
             }
         });
     }
 
     /**
-     * Clear error highlights from the input editor
+     * Clear error highlights from the editor
      */
     clearErrorHighlights() {
+        if (!this.jsonEditor) return;
         
-        const lineCount = this.inputEditor.lineCount();
+        const lineCount = this.jsonEditor.lineCount();
         for (let i = 0; i < lineCount; i++) {
-            this.inputEditor.removeLineClass(i, 'background', 'error-line');
+            this.jsonEditor.removeLineClass(i, 'background', 'error-line');
         }
     }
 
     /**
      * Show toast notification
      */
-    showToast(message, type = 'success') {
+    showToast(message, type = "success") {
         // Remove existing toast
-        const existingToast = document.querySelector('.toast');
+        const existingToast = document.querySelector(".toast");
         if (existingToast) {
             existingToast.remove();
         }
 
         // Create new toast
-        const toast = document.createElement('div');
+        const toast = document.createElement("div");
         toast.className = `toast ${type}`;
         toast.textContent = message;
         
@@ -594,7 +529,7 @@ linter = new JSONLinter();
         // Auto-hide after 3 seconds
         setTimeout(() => {
             if (toast.parentNode) {
-                toast.classList.add('hidden');
+                toast.classList.add("hidden");
                 setTimeout(() => {
                     if (toast.parentNode) {
                         toast.remove();
@@ -608,7 +543,7 @@ linter = new JSONLinter();
      * Initialize font size from localStorage
      */
     initializeFontSize() {
-        const savedFontSize = localStorage.getItem('json-lint-font-size');
+        const savedFontSize = localStorage.getItem("json-lint-font-size");
         if (savedFontSize) {
             this.fontSize = parseInt(savedFontSize);
         }
@@ -623,9 +558,9 @@ linter = new JSONLinter();
             this.fontSize += 2;
             this.applyFontSize();
             this.saveFontSize();
-            this.showToast(`Font size increased to ${this.fontSize}px`, 'success');
+            this.showToast(`Font size increased to ${this.fontSize}px`, "success");
         } else {
-            this.showToast('Maximum font size reached', 'warning');
+            this.showToast("Maximum font size reached", "warning");
         }
     }
 
@@ -637,36 +572,28 @@ linter = new JSONLinter();
             this.fontSize -= 2;
             this.applyFontSize();
             this.saveFontSize();
-            this.showToast(`Font size decreased to ${this.fontSize}px`, 'success');
+            this.showToast(`Font size decreased to ${this.fontSize}px`, "success");
         } else {
-            this.showToast('Minimum font size reached', 'warning');
+            this.showToast("Minimum font size reached", "warning");
         }
     }
 
     /**
-     * Apply font size to editors
+     * Apply font size to editor
      */
     applyFontSize() {
         const fontSizeStyle = `${this.fontSize}px`;
         
-        // Apply to CodeMirror editors
-        if (this.inputEditor) {
-            this.inputEditor.getWrapperElement().style.fontSize = fontSizeStyle;
-            this.inputEditor.refresh();
-        }
-        if (this.outputEditor) {
-            this.outputEditor.getWrapperElement().style.fontSize = fontSizeStyle;
-            this.outputEditor.refresh();
+        // Apply to CodeMirror editor
+        if (this.jsonEditor) {
+            this.jsonEditor.getWrapperElement().style.fontSize = fontSizeStyle;
+            this.jsonEditor.refresh();
         }
 
-        // Apply to fallback textareas (in case CodeMirror isn't loaded)
-        const inputTextarea = document.getElementById('inputEditor');
-        const outputTextarea = document.getElementById('outputEditor');
-        if (inputTextarea) {
-            inputTextarea.style.fontSize = fontSizeStyle;
-        }
-        if (outputTextarea) {
-            outputTextarea.style.fontSize = fontSizeStyle;
+        // Apply to fallback textarea (in case CodeMirror isnt loaded)
+        const jsonTextarea = document.getElementById("jsonEditor");
+        if (jsonTextarea) {
+            jsonTextarea.style.fontSize = fontSizeStyle;
         }
     }
 
@@ -674,11 +601,11 @@ linter = new JSONLinter();
      * Save font size to localStorage
      */
     saveFontSize() {
-        localStorage.setItem('json-lint-font-size', this.fontSize.toString());
+        localStorage.setItem("json-lint-font-size", this.fontSize.toString());
     }
 }
 
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
     module.exports = UIManager;
 }
