@@ -1,5 +1,6 @@
 /**
  * JSON Linter - Core functionality for JSON validation and formatting
+ * Uses json-parse-better-errors library for superior error detection with accurate line numbers
  */
 
 class JSONLinter {
@@ -10,7 +11,7 @@ class JSONLinter {
     }
 
     /**
-     * Validate JSON string using jsonlint library for better error reporting
+     * Validate JSON string using json-parse-better-errors library for precise error reporting
      * @param {string} jsonString - The JSON string to validate
      * @returns {Object} - Validation result with isValid, errors, and data
      */
@@ -26,17 +27,29 @@ class JSONLinter {
         }
 
         try {
-            // First try with jsonlint for better error messages
-            if (typeof jsonlint !== 'undefined') {
-                const result = jsonlint.parse(jsonString);
-                this.isValid = true;
-                return {
-                    isValid: true,
-                    errors: [],
-                    data: result
-                };
+            // Use json-parse-better-errors for better error reporting if available
+            if (typeof JSONParseBetterErrors !== 'undefined') {
+                try {
+                    const data = JSONParseBetterErrors(jsonString);
+                    this.isValid = true;
+                    return {
+                        isValid: true,
+                        errors: [],
+                        data: data
+                    };
+                } catch (betterError) {
+                    this.isValid = false;
+                    const errorMessage = this.parseBetterError(betterError, jsonString);
+                    this.errors = [errorMessage];
+                    
+                    return {
+                        isValid: false,
+                        errors: this.errors,
+                        data: null
+                    };
+                }
             } else {
-                // Fallback to native JSON.parse
+                // Fallback to native JSON.parse with enhanced error parsing
                 const result = JSON.parse(jsonString);
                 this.isValid = true;
                 return {
@@ -59,6 +72,65 @@ class JSONLinter {
     }
 
     /**
+     * Parse json-parse-better-errors error for enhanced error messages
+     * @param {Error} error - The error object from json-parse-better-errors
+     * @param {string} jsonString - The original JSON string
+     * @returns {string} - Formatted error message
+     */
+    parseBetterError(error, jsonString) {
+        let message = error.message || 'Parse error';
+        
+        // json-parse-better-errors provides excellent location information
+        if (error.line !== undefined && error.column !== undefined) {
+            const line = error.line;
+            const column = error.column;
+            
+            // Get the actual line content for context
+            const lines = jsonString.split('\n');
+            const lineContent = lines[line - 1] || '';
+            const contextStart = Math.max(0, column - 25);
+            const contextEnd = Math.min(lineContent.length, column + 25);
+            const context = lineContent.substring(contextStart, contextEnd);
+            const pointer = ' '.repeat(Math.max(0, column - contextStart - 1)) + '^';
+            
+            return `Parse error at line ${line}, column ${column}: ${message}\n\nContext:\n${context}\n${pointer}`;
+        }
+        
+        // If we have offset information, convert to line/column
+        if (error.offset !== undefined || error.index !== undefined) {
+            const position = error.offset || error.index;
+            const lineInfo = this.getLineColumnFromPosition(jsonString, position);
+            const lines = jsonString.split('\n');
+            const lineContent = lines[lineInfo.line - 1] || '';
+            const contextStart = Math.max(0, lineInfo.column - 25);
+            const contextEnd = Math.min(lineContent.length, lineInfo.column + 25);
+            const context = lineContent.substring(contextStart, contextEnd);
+            const pointer = ' '.repeat(Math.max(0, lineInfo.column - contextStart - 1)) + '^';
+            
+            return `Parse error at line ${lineInfo.line}, column ${lineInfo.column}: ${message}\n\nContext:\n${context}\n${pointer}`;
+        }
+        
+        return `Parse error: ${message}`;
+    }
+
+    /**
+     * Convert character position to line and column numbers
+     * @param {string} text - The text content
+     * @param {number} position - Character position
+     * @returns {Object} - Object with line and column properties
+     */
+    getLineColumnFromPosition(text, position) {
+        if (position <= 0) return { line: 1, column: 1 };
+        
+        const beforeError = text.substring(0, position);
+        const lines = beforeError.split('\n');
+        const line = lines.length;
+        const column = lines[lines.length - 1].length + 1;
+        
+        return { line, column };
+    }
+
+    /**
      * Format JSON with proper indentation
      */
     format(jsonString, indent = 2) {
@@ -70,8 +142,17 @@ class JSONLinter {
                 };
             }
 
-            const parsed = JSON.parse(jsonString);
-            const formatted = JSON.stringify(parsed, null, indent);
+            // Use our validate method to parse the JSON
+            const validationResult = this.validate(jsonString);
+            if (!validationResult.isValid) {
+                return {
+                    success: false,
+                    errors: validationResult.errors,
+                    formatted: null
+                };
+            }
+
+            const formatted = JSON.stringify(validationResult.data, null, indent);
             
             return {
                 success: true,
@@ -99,8 +180,17 @@ class JSONLinter {
                 };
             }
 
-            const parsed = JSON.parse(jsonString);
-            const compressed = JSON.stringify(parsed);
+            // Use our validate method to parse the JSON
+            const validationResult = this.validate(jsonString);
+            if (!validationResult.isValid) {
+                return {
+                    success: false,
+                    errors: validationResult.errors,
+                    compressed: null
+                };
+            }
+
+            const compressed = JSON.stringify(validationResult.data);
             
             return {
                 success: true,
@@ -117,7 +207,7 @@ class JSONLinter {
     }
 
     /**
-     * Parse and format error messages for better user experience
+     * Parse and format error messages for better user experience (enhanced fallback)
      * @param {Error} error - The error object
      * @param {string} jsonString - The original JSON string
      * @returns {string} - Formatted error message
@@ -125,30 +215,74 @@ class JSONLinter {
     parseError(error, jsonString) {
         let message = error.message;
         
-        // Extract line and column information if available
+        // Extract line and column information from error message
         const lineMatch = message.match(/line (\d+)/i);
         const columnMatch = message.match(/column (\d+)/i);
         const positionMatch = message.match(/position (\d+)/i);
         
-        if (lineMatch || columnMatch || positionMatch) {
-            const line = lineMatch ? parseInt(lineMatch[1]) : null;
+        if (lineMatch) {
+            const line = parseInt(lineMatch[1]);
             const column = columnMatch ? parseInt(columnMatch[1]) : null;
-            const position = positionMatch ? parseInt(positionMatch[1]) : null;
             
-            let location = '';
-            if (line && column) {
-                location = ` at line ${line}, column ${column}`;
-            } else if (line) {
-                location = ` at line ${line}`;
-            } else if (position) {
-                const lineNumber = this.getLineFromPosition(jsonString, position);
-                location = ` at line ${lineNumber}`;
+            if (column) {
+                return `Parse error on line ${line}, column ${column}: ${message}`;
+            } else {
+                return `Parse error on line ${line}: ${message}`;
             }
-            
-            return `${message}${location}`;
+        } else if (positionMatch) {
+            const position = parseInt(positionMatch[1]);
+            const lineInfo = this.getLineColumnFromPosition(jsonString, position);
+            return `Parse error on line ${lineInfo.line}, column ${lineInfo.column}: ${message}`;
         }
         
-        return message;
+        // Enhanced parsing for native JSON.parse errors
+        const nativeErrorMatch = message.match(/Unexpected token (.+) in JSON at position (\d+)/);
+        if (nativeErrorMatch) {
+            const token = nativeErrorMatch[1];
+            const position = parseInt(nativeErrorMatch[2]);
+            const lineInfo = this.getLineColumnFromPosition(jsonString, position);
+            const lines = jsonString.split('\n');
+            const lineContent = lines[lineInfo.line - 1] || '';
+            const contextStart = Math.max(0, lineInfo.column - 25);
+            const contextEnd = Math.min(lineContent.length, lineInfo.column + 25);
+            const context = lineContent.substring(contextStart, contextEnd);
+            const pointer = ' '.repeat(Math.max(0, lineInfo.column - contextStart - 1)) + '^';
+            
+            return `Parse error at line ${lineInfo.line}, column ${lineInfo.column}: Unexpected token ${token}\n\nContext:\n${context}\n${pointer}`;
+        }
+        
+        // Handle other common JSON.parse error patterns
+        const unexpectedEndMatch = message.match(/Unexpected end of JSON input/);
+        if (unexpectedEndMatch) {
+            const lines = jsonString.split('\n');
+            const lastLine = lines.length;
+            const lastColumn = lines[lines.length - 1].length + 1;
+            
+            return `Parse error at line ${lastLine}, column ${lastColumn}: Unexpected end of JSON input (missing closing bracket, brace, or quote?)`;
+        }
+        
+        const unexpectedTokenMatch = message.match(/Unexpected token '(.+)'/);
+        if (unexpectedTokenMatch) {
+            const token = unexpectedTokenMatch[1];
+            const lines = jsonString.split('\n');
+            
+            // Find the line containing this token
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const tokenIndex = line.indexOf(token);
+                
+                if (tokenIndex !== -1) {
+                    const contextStart = Math.max(0, tokenIndex - 25);
+                    const contextEnd = Math.min(line.length, tokenIndex + 25);
+                    const context = line.substring(contextStart, contextEnd);
+                    const pointer = ' '.repeat(Math.max(0, tokenIndex - contextStart)) + '^';
+                    
+                    return `Parse error at line ${i + 1}, column ${tokenIndex + 1}: Unexpected token '${token}'\n\nContext:\n${context}\n${pointer}`;
+                }
+            }
+        }
+        
+        return `Parse error: ${message}`;
     }
 
     /**
@@ -159,7 +293,7 @@ class JSONLinter {
     }
 
     /**
-     * Convert character position to line number
+     * Convert character position to line number (legacy method)
      */
     getLineFromPosition(text, position) {
         if (position <= 0) return 1;

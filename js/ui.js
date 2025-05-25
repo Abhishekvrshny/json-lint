@@ -433,15 +433,12 @@ class UIManager {
     }
 
     /**
-     * Show error panel with errors
+     * Show errors in status area instead of popup
      */
     showErrors(errors) {
-        const errorPanel = document.getElementById('errorPanel');
-        const errorContent = document.getElementById('errorContent');
-        
-        if (errorPanel && errorContent) {
-            errorContent.textContent = errors.join('\n');
-            errorPanel.classList.remove('hidden');
+        // Don't show the popup panel, just show error in toast
+        if (errors && errors.length > 0) {
+            this.showToast(errors[0], 'error');
         }
     }
 
@@ -489,10 +486,13 @@ class UIManager {
         this.clearErrorHighlights();
         
         errors.forEach(error => {
-            const lineMatch = error.match(/line (\d+)/i);
+            // Look for line number in various formats
+            const lineMatch = error.match(/(?:line|Line)\s+(\d+)/i);
             if (lineMatch) {
                 const lineNumber = parseInt(lineMatch[1]) - 1; // CodeMirror uses 0-based indexing
-                this.jsonEditor.addLineClass(lineNumber, 'background', 'error-line');
+                if (lineNumber >= 0 && lineNumber < this.jsonEditor.lineCount()) {
+                    this.jsonEditor.addLineClass(lineNumber, 'background', 'error-line');
+                }
             }
         });
     }
