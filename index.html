@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A modern, minimalistic JSON linting tool for validation, formatting, and error highlighting">
+    <meta name="keywords" content="JSON, linter, validator, formatter, prettify">
+    <title>JSON Lint - Validate, Format & Prettify JSON</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/default.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">
+                <span class="icon">📋</span>
+                JSON Lint
+            </h1>
+            <div class="header-controls">
+                <button id="themeToggle" class="btn btn-icon" title="Toggle dark/light mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button id="sampleBtn" class="btn btn-secondary" title="Load sample JSON">
+                    Sample
+                </button>
+                <button id="clearBtn" class="btn btn-secondary" title="Clear input">
+                    Clear
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h2>Input JSON</h2>
+                    <div class="panel-controls">
+                        <button id="formatBtn" class="btn btn-primary" title="Format JSON">
+                            Format
+                        </button>
+                        <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
+                            Validate
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <textarea id="inputEditor" placeholder="Paste your JSON here..."></textarea>
+                </div>
+                <div class="status-bar">
+                    <span id="inputStatus" class="status"></span>
+                    <span id="inputSize" class="size-info"></span>
+                </div>
+            </div>
+
+            <div class="panel output-panel">
+                <div class="panel-header">
+                    <h2>Output</h2>
+                    <div class="panel-controls">
+                        <button id="copyBtn" class="btn btn-secondary" title="Copy to clipboard">
+                            Copy
+                        </button>
+                        <button id="downloadBtn" class="btn btn-secondary" title="Download JSON">
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <textarea id="outputEditor" readonly placeholder="Formatted JSON will appear here..."></textarea>
+                </div>
+                <div class="status-bar">
+                    <span id="outputStatus" class="status"></span>
+                    <span id="outputSize" class="size-info"></span>
+                </div>
+            </div>
+        </main>
+
+        <div id="errorPanel" class="error-panel hidden">
+            <div class="error-header">
+                <h3>Validation Errors</h3>
+                <button id="closeErrorBtn" class="btn btn-icon">✕</button>
+            </div>
+            <div id="errorContent" class="error-content"></div>
+        </div>
+
+        <footer class="footer">
+            <p>
+                Made with ❤️ for JSON validation and formatting
+                <span class="separator">•</span>
+                <a href="https://github.com/abhishekvarshney/json-lint" target="_blank" rel="noopener">
+                    View on GitHub
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonlint/1.6.3/jsonlint.min.js"></script>
+    <script src="js/linter.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
