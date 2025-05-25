@@ -105,10 +105,10 @@ class UIManager {
             validateBtn.addEventListener('click', () => this.validateJSON());
         }
 
-        // Compress button
-        const compressBtn = document.getElementById('compressBtn');
-        if (compressBtn) {
-            compressBtn.addEventListener('click', () => this.compressJSON());
+        // Compress toggle checkbox
+        const compressToggle = document.getElementById('compressToggle');
+        if (compressToggle) {
+            compressToggle.addEventListener('change', () => this.toggleCompression());
         }
 
         // Copy button
@@ -322,25 +322,54 @@ class UIManager {
     }
 
     /**
-     * Compress/minify JSON
+     * Toggle between compressed and formatted JSON based on checkbox state
      */
-    compressJSON() {
+    toggleCompression() {
+        const compressToggle = document.getElementById('compressToggle');
+        const isCompressed = compressToggle && compressToggle.checked;
+        
         const input = this.getInputValue();
-        const linter = new JSONLinter();
-        const result = linter.compress(input);
+        if (!input.trim()) {
+            this.showToast('No JSON to process', 'error');
+            return;
+        }
 
-        if (result.success) {
-            this.setOutputValue(result.compressed);
-            this.updateOutputStatus('✓ JSON compressed', 'valid');
-            this.hideErrorPanel();
-            this.clearErrorHighlights();
-            this.updateOutputStats();
-            this.showToast('JSON compressed successfully', 'success');
+        const linter = new JSONLinter();
+        
+        if (isCompressed) {
+            // Compress the JSON
+            const result = linter.compress(input);
+            if (result.success) {
+                this.setOutputValue(result.compressed);
+                this.updateOutputStatus('✓ JSON compressed', 'valid');
+                this.hideErrorPanel();
+                this.clearErrorHighlights();
+                this.updateOutputStats();
+                this.showToast('JSON compressed', 'success');
+            } else {
+                this.showErrors(result.errors);
+                this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+                this.highlightErrorLines(result.errors, input);
+                this.setOutputValue('');
+                // Uncheck the checkbox if compression failed
+                compressToggle.checked = false;
+            }
         } else {
-            this.showErrors(result.errors);
-            this.updateOutputStatus('✗ Invalid JSON', 'invalid');
-            this.highlightErrorLines(result.errors, input);
-            this.setOutputValue('');
+            // Format the JSON (expand)
+            const result = linter.format(input);
+            if (result.success) {
+                this.setOutputValue(result.formatted);
+                this.updateOutputStatus('✓ JSON formatted', 'valid');
+                this.hideErrorPanel();
+                this.clearErrorHighlights();
+                this.updateOutputStats();
+                this.showToast('JSON formatted', 'success');
+            } else {
+                this.showErrors(result.errors);
+                this.updateOutputStatus('✗ Invalid JSON', 'invalid');
+                this.highlightErrorLines(result.errors, input);
+                this.setOutputValue('');
+            }
         }
     }
 
@@ -475,16 +504,13 @@ class UIManager {
      */
     updateInputStats() {
         const input = this.getInputValue();
-        const linter = new JSONLinter();
+        const
+linter = new JSONLinter();
         const stats = linter.getStats(input);
         
-        const sizeElement = document.getElementById('inputSize');
-        if (sizeElement) {
-            if (input.trim()) {
-                sizeElement.textContent = `${stats.characters} chars, ${stats.lines} lines, ${stats.sizeFormatted}`;
-            } else {
-                sizeElement.textContent = '';
-            }
+        const inputSizeElement = document.getElementById('inputSize');
+        if (inputSizeElement) {
+            inputSizeElement.textContent = stats.sizeFormatted;
         }
     }
 
@@ -494,175 +520,70 @@ class UIManager {
     updateOutputStats() {
         const output = this.outputEditor ? this.outputEditor.getValue() : 
                       document.getElementById('outputEditor').value;
+        const linter = new JSONLinter();
+        const stats = linter.getStats(output);
         
-        const sizeElement = document.getElementById('outputSize');
-        if (sizeElement && output.trim()) {
-            const lines = output.split('\n').length;
-            const chars = output.length;
-            const bytes = new Blob([output]).size;
-            const linter = new JSONLinter();
-            const sizeFormatted = linter.formatBytes(bytes);
-            
-            sizeElement.textContent = `${chars} chars, ${lines} lines, ${sizeFormatted}`;
-        } else if (sizeElement) {
-            sizeElement.textContent = '';
+        const outputSizeElement = document.getElementById('outputSize');
+        if (outputSizeElement) {
+            outputSizeElement.textContent = stats.sizeFormatted;
+        }
+    }
+
+    /**
+     * Highlight error lines in the input editor
+     */
+    highlightErrorLines(errors, input) {
+        
+        this.clearErrorHighlights();
+        
+        errors.forEach(error => {
+            const lineMatch = error.match(/line (\d+)/i);
+            if (lineMatch) {
+                const lineNumber = parseInt(lineMatch[1]) - 1; // CodeMirror uses 0-based indexing
+                this.inputEditor.addLineClass(lineNumber, 'background', 'error-line');
+            }
+        });
+    }
+
+    /**
+     * Clear error highlights from the input editor
+     */
+    clearErrorHighlights() {
+        
+        const lineCount = this.inputEditor.lineCount();
+        for (let i = 0; i < lineCount; i++) {
+            this.inputEditor.removeLineClass(i, 'background', 'error-line');
         }
     }
 
     /**
      * Show toast notification
      */
-    showToast(message, type = '') {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toastMessage');
+    showToast(message, type = 'success') {
+        // Remove existing toast
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
         
-        if (toast && toastMessage) {
-            toastMessage.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.classList.remove('hidden');
-            
-            setTimeout(() => {
+        document.body.appendChild(toast);
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
                 toast.classList.add('hidden');
-            }, 3000);
-        }
-    }
-
-    /**
-     * Highlight line in editor (for error highlighting)
-     */
-    highlightLine(editor, lineNumber) {
-        if (editor && typeof editor.addLineClass === 'function') {
-            // Clear previous highlights
-            editor.eachLine((line) => {
-                editor.removeLineClass(line, 'background', 'error-line');
-            });
-            
-            // Add highlight to specific line
-            if (lineNumber > 0 && lineNumber <= editor.lineCount()) {
-                editor.addLineClass(lineNumber - 1, 'background', 'error-line');
-                editor.scrollIntoView({ line: lineNumber - 1, ch: 0 });
-            }
-        }
-    }
-
-    /**
-     * Get editor line count
-     */
-    getLineCount(editor) {
-        return editor ? editor.lineCount() : 0;
-    }
-
-    /**
-     * Highlight error lines in the input editor
-     */
-    highlightErrorLines(errors, jsonString) {
-        if (!this.inputEditor || !errors || errors.length === 0) return;
-
-        // Clear previous error highlights
-        this.clearErrorHighlights();
-
-        errors.forEach(error => {
-            const lineNumber = this.extractLineNumber(error, jsonString);
-            if (lineNumber > 0) {
-                this.highlightLine(this.inputEditor, lineNumber);
-            }
-        });
-    }
-
-    /**
-     * Clear all error highlights from the input editor
-     */
-    clearErrorHighlights() {
-        if (!this.inputEditor) return;
-
-        // Remove error-line class from all lines
-        this.inputEditor.eachLine((line) => {
-            this.inputEditor.removeLineClass(line, 'background', 'error-line');
-        });
-    }
-
-    /**
-     * Extract line number from error message
-     */
-    extractLineNumber(errorMessage, jsonString) {
-        // Try to extract line number from various error message formats
-        const lineMatches = [
-            /line (\d+)/i,
-            /at line (\d+)/i,
-            /on line (\d+)/i,
-            /line:?\s*(\d+)/i
-        ];
-
-        for (const regex of lineMatches) {
-            const match = errorMessage.match(regex);
-            if (match) {
-                return parseInt(match[1], 10);
-            }
-        }
-
-        // Try to extract position and convert to line number
-        const positionMatch = errorMessage.match(/position (\d+)/i);
-        if (positionMatch) {
-            const position = parseInt(positionMatch[1], 10);
-            return this.getLineFromPosition(jsonString, position);
-        }
-
-        // If no line number found, try to parse the error and find approximate location
-        return this.findErrorLineByContent(errorMessage, jsonString);
-    }
-
-    /**
-     * Convert character position to line number
-     */
-    getLineFromPosition(text, position) {
-        if (position <= 0) return 1;
-        
-        const beforeError = text.substring(0, position);
-        const lines = beforeError.split('\n');
-        return lines.length;
-    }
-
-    /**
-     * Find error line by analyzing the error content
-     */
-    findErrorLineByContent(errorMessage, jsonString) {
-        // Look for common JSON syntax errors and try to locate them
-        const lines = jsonString.split('\n');
-        
-        // Check for common error patterns
-        if (errorMessage.toLowerCase().includes('unexpected token')) {
-            // Try to find the unexpected token
-            const tokenMatch = errorMessage.match(/unexpected token '?(.)'?/i);
-            if (tokenMatch) {
-                const token = tokenMatch[1];
-                // Find the first occurrence of this token that might be problematic
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (line.includes(token)) {
-                        // Simple heuristic: if it's a structural character in wrong place
-                        if (['{', '}', '[', ']', ',', ':'].includes(token)) {
-                            return i + 1;
-                        }
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
                     }
-                }
+                }, 300);
             }
-        }
-
-        // Check for unterminated strings
-        if (errorMessage.toLowerCase().includes('unterminated string') || 
-            errorMessage.toLowerCase().includes('unexpected end')) {
-            // Find lines with unmatched quotes
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                const quotes = (line.match(/"/g) || []).length;
-                if (quotes % 2 !== 0) {
-                    return i + 1;
-                }
-            }
-        }
-
-        // Default to line 1 if we can't determine the error location
-        return 1;
+        }, 3000);
     }
 }
 

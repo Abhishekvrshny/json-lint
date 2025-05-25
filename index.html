@@ -20,6 +20,14 @@
                 JSON Lint
             </h1>
             <div class="header-controls">
+                <div class="font-size-controls">
+                    <button id="fontSizeDecrease" class="btn btn-icon" title="Decrease font size">
+                        <span>−</span>
+                    </button>
+                    <button id="fontSizeIncrease" class="btn btn-icon" title="Increase font size">
+                        <span>+</span>
+                    </button>
+                </div>
                 <button id="themeToggle" class="btn btn-icon" title="Toggle dark/light mode">
                     <span class="theme-icon">🌙</span>
                 </button>
@@ -40,9 +48,6 @@
                         <button id="formatBtn" class="btn btn-primary" title="Format JSON">
                             Format
                         </button>
-                        <button id="compressBtn" class="btn btn-secondary" title="Compress/Minify JSON">
-                            Compress
-                        </button>
                         <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
                             Validate
                         </button>
@@ -61,6 +66,10 @@
                 <div class="panel-header">
                     <h2>Output</h2>
                     <div class="panel-controls">
+                        <label class="checkbox-container" title="Toggle between compressed and formatted JSON">
+                            <input type="checkbox" id="compressToggle">
+                            <span class="checkbox-label">Compress</span>
+                        </label>
                         <button id="copyBtn" class="btn btn-secondary" title="Copy to clipboard">
                             Copy
                         </button>

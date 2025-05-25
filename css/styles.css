@@ -88,6 +88,31 @@ body {
     align-items: center;
 }
 
+/* Font size controls */
+.font-size-controls {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    padding: 0.25rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.font-size-controls .btn {
+    min-width: 2rem;
+    min-height: 2rem;
+    padding: 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.font-size-controls .btn:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
@@ -131,6 +156,63 @@ body {
 .btn-icon {
     padding: 0.5rem;
     min-width: 2.5rem;
+}
+
+/* Checkbox styling */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    user-select: none;
+}
+
+.checkbox-container:hover {
+    background-color: var(--bg-secondary);
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 3px;
+    background-color: var(--bg-primary);
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+    appearance: none;
+    transition: var(--transition);
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-container input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.checkbox-container input[type="checkbox"]:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.checkbox-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
 }
 
 /* Main content */
@@ -474,7 +556,6 @@ body {
     }
     
     .CodeMirror {
-        min-height: 300px !important;
     }
     
     .toast {
@@ -504,7 +585,6 @@ body {
     }
     
     .CodeMirror {
-        min-height: 250px !important;
         font-size: 0.8rem;
     }
 }
@@ -532,8 +612,5 @@ textarea:focus {
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
     }
 }

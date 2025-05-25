@@ -1,69 +1,81 @@
-# JSON Lint
+# JSON Lint - Online JSON Validator and Formatter
 
-A modern, minimalistic JSON linting tool for validation, formatting, and error highlighting. Built entirely with frontend technologies and hosted on GitHub Pages.
+A powerful, frontend-only JSON validation and formatting tool built with vanilla JavaScript. Perfect for developers who need to quickly validate, format, and work with JSON data.
 
 ## 🚀 Features
 
-- **JSON Validation** - Real-time validation with detailed error messages
-- **JSON Formatting** - Pretty-print JSON with proper indentation
-- **Error Highlighting** - Clear error messages with line/column information
-- **Dark/Light Mode** - Toggle between themes with system preference detection
-- **Copy to Clipboard** - One-click copy of formatted JSON
-- **Download JSON** - Save formatted JSON as a file
-- **Sample JSON** - Load sample data for quick testing
-- **Responsive Design** - Works on desktop, tablet, and mobile devices
-- **Keyboard Shortcuts** - Efficient workflow with hotkeys
-- **Statistics** - View JSON size, character count, and structure info
+- **JSON Validation**: Real-time validation with detailed error messages
+- **JSON Formatting**: Beautiful syntax highlighting and proper indentation
+- **JSON Compression**: Minify JSON by removing unnecessary whitespace
+- **Dark/Light Theme**: Toggle between themes with automatic system preference detection
+- **Copy to Clipboard**: One-click copying of formatted JSON
+- **Download JSON**: Save formatted JSON as a file
+- **Sample Data**: Load sample JSON for testing
+- **Keyboard Shortcuts**: Efficient workflow with keyboard shortcuts
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **No Backend Required**: Completely client-side application
 
 ## 🎯 Live Demo
 
-Visit the live application: [https://abhishekvarshney.github.io/json-lint](https://abhishekvarshney.github.io/json-lint)
+Visit the live application: [JSON Lint Tool](https://your-username.github.io/json-lint)
 
-## 🛠️ Technologies Used
+## 🛠️ Usage
 
-- **HTML5** - Semantic markup structure
-- **CSS3** - Modern styling with CSS variables and grid layout
-- **JavaScript (ES6+)** - Modular application architecture
-- **CodeMirror** - Syntax highlighting and code editing
-- **JSONLint** - Enhanced JSON validation and error reporting
+### Basic Operations
 
-## 📋 Usage
-
-### Basic Usage
-
-1. **Paste or type JSON** into the input panel
-2. **Auto-validation** occurs as you type
-3. **Click "Format"** to prettify valid JSON
-4. **Copy or download** the formatted result
+1. **Validate JSON**: Paste your JSON in the input panel and click "Validate"
+2. **Format JSON**: Click "Format" to beautify your JSON with proper indentation
+3. **Compress JSON**: Check the "Compress" checkbox to minify your JSON
+4. **Copy Result**: Click "Copy" to copy the formatted JSON to clipboard
+5. **Download**: Click "Download" to save the JSON as a file
 
 ### Keyboard Shortcuts
 
-- `Ctrl/Cmd + Enter` - Format JSON
-- `Ctrl/Cmd + L` - Load sample JSON
-- `Ctrl/Cmd + K` - Clear input
-- `Ctrl/Cmd + D` - Toggle dark/light mode
+- `Ctrl/Cmd + Enter`: Format JSON
+- `Ctrl/Cmd + L`: Load Sample JSON
+- `Ctrl/Cmd + K`: Clear Input
+- `Ctrl/Cmd + D`: Toggle Dark Mode
 
 ### Features in Detail
 
 #### JSON Validation
-- Real-time validation as you type
-- Detailed error messages with line/column information
-- Support for nested objects and arrays
-- Handles various JSON data types
+- Real-time validation as you type (with debouncing)
+- Detailed error messages with line and column information
+- Visual error highlighting in the editor
 
-#### JSON Formatting
-- Customizable indentation (default: 2 spaces)
-- Preserves data structure and types
-- Handles large JSON files efficiently
-- Maintains proper JSON syntax
+#### Syntax Highlighting
+- Color-coded JSON elements (keys, strings, numbers, booleans, null)
+- Different color schemes for light and dark themes
+- Line numbers and code folding
 
-#### Error Highlighting
-- Visual error indicators in the status bar
-- Detailed error panel with specific error messages
-- Line and column information for syntax errors
-- Clear error descriptions for quick debugging
+#### Theme Support
+- Automatic detection of system preference
+- Manual toggle between light and dark themes
+- Persistent theme selection (saved in localStorage)
 
-## 🏗️ Project Structure
+## 🏗️ Technical Details
+
+### Architecture
+
+The application follows a modular architecture with three main components:
+
+- **JSONLinter**: Core JSON validation and formatting logic
+- **UIManager**: User interface interactions and DOM manipulation
+- **JSONLintApp**: Main application controller and initialization
+
+### Dependencies
+
+- **CodeMirror 5**: Advanced code editor with syntax highlighting
+- **JSONLint**: Enhanced JSON parsing with better error messages (optional)
+
+### Browser Support
+
+- Chrome/Chromium 60+
+- Firefox 55+
+- Safari 12+
+- Edge 79+
+
+## 📁 Project Structure
 
 ```
 json-lint/
@@ -71,119 +83,109 @@ json-lint/
 ├── css/
 │   └── styles.css          # Application styles
 ├── js/
-│   ├── linter.js           # JSON validation and formatting logic
-│   ├── ui.js               # User interface management
-│   └── main.js             # Application entry point
-├── .gitignore              # Git ignore rules
-├── LICENSE                 # MIT License
-└── README.md               # Project documentation
+│   ├── main.js            # Application entry point
+│   ├── linter.js          # JSON validation logic
+│   └── ui.js              # UI management
+├── .github/
+│   └── workflows/
+│       └── deploy.yml     # GitHub Pages deployment
+├── .gitignore             # Git ignore rules
+├── LICENSE                # MIT License
+└── README.md              # This file
 ```
 
-## 🚀 Getting Started
+## 🚀 Deployment
 
-### Local Development
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/abhishekvarshney/json-lint.git
-   cd json-lint
-   ```
-
-2. **Open in browser**
-   ```bash
-   # Using Python (if installed)
-   python -m http.server 8000
-   
-   # Using Node.js (if installed)
-   npx http-server
-   
-   # Or simply open index.html in your browser
-   open index.html
-   ```
-
-3. **Start developing**
-   - Edit files in your preferred code editor
-   - Refresh browser to see changes
-   - No build process required!
-
-### GitHub Pages Deployment
+### GitHub Pages
 
 This project is configured for automatic deployment to GitHub Pages:
 
-1. **Fork or clone** this repository
-2. **Enable GitHub Pages** in repository settings
-3. **Select source** as "Deploy from a branch"
-4. **Choose branch** as "main" and folder as "/ (root)"
-5. **Your site** will be available at `https://yourusername.github.io/json-lint`
+1. Push your code to the `main` branch
+2. GitHub Actions will automatically deploy to GitHub Pages
+3. Your site will be available at `https://your-username.github.io/json-lint`
+
+### Manual Deployment
+
+Since this is a static site, you can deploy it anywhere:
+
+1. Upload all files to your web server
+2. Ensure `index.html` is accessible
+3. No server-side configuration required
+
+### Local Development
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/json-lint.git
+   cd json-lint
+   ```
+
+2. Open `index.html` in your browser or serve with a local server:
+   ```bash
+   # Using Python
+   python -m http.server 8000
+   
+   # Using Node.js
+   npx serve .
+   
+   # Using PHP
+   php -S localhost:8000
+   ```
+
+3. Navigate to `http://localhost:8000`
 
 ## 🎨 Customization
 
 ### Themes
-The application supports both light and dark themes with CSS variables for easy customization:
+
+The application supports custom themes through CSS variables. You can modify the color scheme by updating the CSS variables in `css/styles.css`:
 
 ```css
 :root {
     --primary-color: #3b82f6;
     --success-color: #10b981;
     --error-color: #ef4444;
-    /* ... more variables */
+    /* ... other variables */
 }
 ```
 
 ### Adding Features
+
 The modular architecture makes it easy to add new features:
 
-1. **Add UI elements** in `index.html`
-2. **Style components** in `css/styles.css`
-3. **Implement logic** in appropriate JS modules
-4. **Wire up events** in `js/ui.js`
+1. Add new methods to the appropriate class (`JSONLinter`, `UIManager`, or `JSONLintApp`)
+2. Update the UI in `index.html` if needed
+3. Add corresponding styles in `css/styles.css`
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how you can help:
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ### Development Guidelines
 
-- Follow existing code style and patterns
-- Add comments for complex logic
-- Test thoroughly across different browsers
-- Ensure responsive design works on all devices
-- Update documentation for new features
+1. Follow the existing code style and structure
+2. Add comments for complex logic
+3. Test your changes across different browsers
+4. Update documentation as needed
 
-## 📝 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- [CodeMirror](https://codemirror.net/) - For the excellent code editor
-- [JSONLint](https://github.com/zaach/jsonlint) - For enhanced JSON validation
-- [GitHub Pages](https://pages.github.com/) - For free hosting
+- [CodeMirror](https://codemirror.net/) for the excellent code editor
+- [JSONLint](https://github.com/zaach/jsonlint) for enhanced JSON parsing
+- The open-source community for inspiration and best practices
 
 ## 📞 Support
 
 If you encounter any issues or have questions:
 
-1. **Check existing issues** on GitHub
-2. **Create a new issue** with detailed information
-3. **Include browser version** and steps to reproduce
-
-## 🔮 Future Enhancements
-
-- [ ] JSON Schema validation
-- [ ] JSONPath query support
-- [ ] Import/Export settings
-- [ ] Multiple file support
-- [ ] Diff comparison tool
-- [ ] API integration examples
-- [ ] Progressive Web App (PWA) features
+1. Check the [Issues](https://github.com/your-username/json-lint/issues) page
+2. Create a new issue if your problem isn't already reported
+3. Provide as much detail as possible, including browser version and steps to reproduce
 
 ---
 
-Made with ❤️ for JSON validation and formatting
+Made with ❤️ for the developer community
