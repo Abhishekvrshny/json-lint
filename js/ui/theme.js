@@ -37,6 +37,11 @@ class ThemeManager {
         if (this.ui.jsonEditor) {
             this.ui.jsonEditor.setOption('theme', this.ui.isDarkMode ? 'material-darker' : 'default');
         }
+        
+        // Update diff editors theme
+        if (this.ui.diffManager) {
+            this.ui.diffManager.updateTheme();
+        }
     }
 
     /**

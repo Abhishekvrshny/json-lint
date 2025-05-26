@@ -25,6 +25,7 @@ class UIManager {
         this.treeManager = new TreeManager(this);
         this.fontManager = new FontManager(this);
         this.typeGeneratorManager = new TypeGeneratorManager(this);
+        this.diffManager = new DiffManager(this);
         this.eventManager = new EventManager(this);
         this.responsiveManager = new ResponsiveManager(this);
         
@@ -38,6 +39,7 @@ class UIManager {
      */
     initialize() {
         this.editorManager.setupEditor();
+        this.diffManager.initialize();
         this.eventManager.bindEvents();
         this.themeManager.updateThemeIcon();
         

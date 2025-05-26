@@ -45,6 +45,11 @@ class EditorManager {
                     this.ui.formatManager.validateJSON();
                 }
                 this.ui.updateStats();
+                
+                // Update diff availability
+                if (this.ui.diffManager) {
+                    this.ui.diffManager.updateDiffAvailability();
+                }
             }, this.ui.debounceDelay);
         });
 
