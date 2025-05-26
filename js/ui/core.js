@@ -38,6 +38,9 @@ class UIManager {
         this.editorManager.setupEditor();
         this.eventManager.bindEvents();
         this.themeManager.updateThemeIcon();
+        
+        // Load sample JSON on page load
+        this.formatManager.loadSampleJSON();
     }
 
     /**
