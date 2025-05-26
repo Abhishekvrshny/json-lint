@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Lint - Test Nested Keys</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JSON Lint - Test Nested Keys</h1>
+        </header>
+        
+        <div class="controls">
+            <label>
+                <input type="checkbox" id="compressToggle"> Compress
+            </label>
+            <label>
+                <input type="checkbox" id="treeModeToggle"> Tree Mode
+            </label>
+            <button id="loadTestData">Load Test Data</button>
+        </div>
+        
+        <div id="editorContainer" class="editor-container">
+            <div id="editorPanel" class="editor-panel">
+                <textarea id="jsonInput" placeholder="Enter JSON here..."></textarea>
+            </div>
+            <div id="treePanel" class="tree-panel hidden">
+                <div id="jsonTreeView"></div>
+            </div>
+        </div>
+        
+        <div id="output"></div>
+    </div>
+
+    <script src="js/ui/core.js"></script>
+    <script src="js/ui/theme.js"></script>
+    <script src="js/ui/events.js"></script>
+    <script src="js/ui/font.js"></script>
+    <script src="js/ui/conversion.js"></script>
+    <script src="js/ui/format.js"></script>
+    <script src="js/ui/tree.js"></script>
+    <script src="js/ui/editor.js"></script>
+    <script src="js/linter.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+    
+    <script>
+        // Load test data with nested objects having duplicate keys
+        document.getElementById('loadTestData').addEventListener('click', function() {
+            const testData = {
+                "user": {
+                    "name": "John Doe",
+                    "email": "john@example.com",
+                    "settings": {
+                        "theme": "dark",
+                        "email": "john.settings@example.com"
+                    }
+                },
+                "admin": {
+                    "name": "Admin User",
+                    "email": "admin@example.com",
+                    "settings": {
+                        "theme": "light",
+                        "email": "admin.settings@example.com"
+                    }
+                },
+                "config": {
+                    "database": {
+                        "host": "localhost",
+                        "port": 5432
+                    },
+                    "cache": {
+                        "host": "redis-server",
+                        "port": 6379
+                    }
+                }
+            };
+            
+            const jsonString = JSON.stringify(testData, null, 2);
+            document.getElementById('jsonInput').value = jsonString;
+            
+            // Trigger validation
+            if (window.ui) {
+                window.ui.validateJSON();
+            }
+        });
+    </script>
+</body>
+</html>

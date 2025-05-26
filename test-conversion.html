@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Conversion Feature</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .panel {
+            flex: 1;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 8px 12px;
+            margin-right: 10px;
+            background: #444;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #555;
+        }
+        .hidden {
+            display: none;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+        .toast.error {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON Conversion Test</h1>
+    
+    <div class="controls">
+        <select id="convertDropdown">
+            <option value="">Convert to...</option>
+            <option value="yaml">YAML</option>
+            <option value="xml">XML</option>
+            <option value="csv">CSV</option>
+        </select>
+        <button id="undoBtn" class="hidden">Undo</button>
+        <button id="loadSample">Load Sample JSON</button>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h3>Input</h3>
+            <textarea id="input" placeholder="Paste JSON here..."></textarea>
+        </div>
+        <div class="panel">
+            <h3>Output</h3>
+            <textarea id="output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        let originalContent = '';
+        let currentFormat = 'json';
+
+        // Simple YAML converter (basic implementation)
+        function convertToYAML(obj, indent = 0) {
+            const spaces = '  '.repeat(indent);
+            let yaml = '';
+            
+            if (Array.isArray(obj)) {
+                obj.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        yaml += spaces + '-\n' + convertToYAML(item, indent + 1);
+                    } else {
+                        yaml += spaces + '- ' + (typeof item === 'string' ? `"${item}"` : item) + '\n';
+                    }
+                });
+            } else if (typeof obj === 'object' && obj !== null) {
+                Object.keys(obj).forEach(key => {
+                    const value = obj[key];
+                    if (typeof value === 'object' && value !== null) {
+                        yaml += spaces + key + ':\n' + convertToYAML(value, indent + 1);
+                    } else {
+                        yaml += spaces + key + ': ' + (typeof value === 'string' ? `"${value}"` : value) + '\n';
+                    }
+                });
+            }
+            
+            return yaml;
+        }
+
+        // Simple XML converter
+        function convertToXML(obj, rootName = 'root') {
+            function objectToXML(obj, indent = 0) {
+                const spaces = '  '.repeat(indent);
+                let xml = '';
+                
+                if (Array.isArray(obj)) {
+                    obj.forEach((item, index) => {
+                        xml += spaces + `<item${index}>\n`;
+                        if (typeof item === 'object' && item !== null) {
+                            xml += objectToXML(item, indent + 1);
+                        } else {
+                            xml += spaces + '  ' + item + '\n';
+                        }
+                        xml += spaces + `</item${index}>\n`;
+                    });
+                } else if (typeof obj === 'object' && obj !== null) {
+                    Object.keys(obj).forEach(key => {
+                        const value = obj[key];
+                        xml += spaces + `<${key}>\n`;
+                        if (typeof value === 'object' && value !== null) {
+                            xml += objectToXML(value, indent + 1);
+                        } else {
+                            xml += spaces + '  ' + value + '\n';
+                        }
+                        xml += spaces + `</${key}>\n`;
+                    });
+                }
+                
+                return xml;
+            }
+            
+            return `<?xml version="1.0" encoding="UTF-8"?>\n<${rootName}>\n${objectToXML(obj, 1)}</${rootName}>`;
+        }
+
+        // Simple CSV converter (for flat objects or arrays)
+        function convertToCSV(obj) {
+            if (Array.isArray(obj) && obj.length > 0 && typeof obj[0] === 'object') {
+                const headers = Object.keys(obj[0]);
+                let csv = headers.join(',') + '\n';
+                
+                obj.forEach(row => {
+                    const values = headers.map(header => {
+                        const value = row[header];
+                        return typeof value === 'string' ? `"${value}"` : value;
+                    });
+                    csv += values.join(',') + '\n';
+                });
+                
+                return csv;
+            } else {
+                return 'CSV conversion only supports arrays of objects';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+
+        function handleConversion(format) {
+            if (!format) return;
+
+            const input = document.getElementById('input').value;
+            if (!input.trim()) {
+                showToast('No JSON to convert', 'error');
+                document.getElementById('convertDropdown').value = '';
+                return;
+            }
+
+            try {
+                const jsonData = JSON.parse(input);
+                
+                if (currentFormat === 'json') {
+                    originalContent = input;
+                }
+
+                let converted = '';
+                switch (format) {
+                    case 'yaml':
+                        converted = convertToYAML(jsonData);
+                        break;
+                    case 'xml':
+                        converted = convertToXML(jsonData);
+                        break;
+                    case 'csv':
+                        converted = convertToCSV(jsonData);
+                        break;
+                    default:
+                        showToast('Unsupported format', 'error');
+                        return;
+                }
+
+                document.getElementById('output').value = converted;
+                currentFormat = format;
+                document.getElementById('undoBtn').classList.remove('hidden');
+                showToast(`Successfully converted to ${format.toUpperCase()}`, 'success');
+
+            } catch (error) {
+                showToast('Invalid JSON: ' + error.message, 'error');
+                document.getElementById('convertDropdown').value = '';
+            }
+        }
+
+        function undoConversion() {
+            if (originalContent && currentFormat !== 'json') {
+                document.getElementById('input').value = originalContent;
+                document.getElementById('output').value = '';
+                currentFormat = 'json';
+                document.getElementById('undoBtn').classList.add('hidden');
+                document.getElementById('convertDropdown').value = '';
+                showToast('Conversion undone, restored to JSON', 'success');
+            } else {
+                showToast('Nothing to undo', 'error');
+            }
+        }
+
+        function loadSampleJSON() {
+            const sampleJSON = {
+                "name": "John Doe",
+                "age": 30,
+                "email": "john.doe@example.com",
+                "address": {
+                    "street": "123 Main St",
+                    "city": "New York",
+                    "zipCode": "10001",
+                    "country": "USA"
+                },
+                "hobbies": ["reading", "swimming", "coding"],
+                "isActive": true,
+                "balance": 1250.75
+            };
+            
+            document.getElementById('input').value = JSON.stringify(sampleJSON, null, 2);
+            document.getElementById('output').value = '';
+            showToast('Sample JSON loaded', 'success');
+        }
+
+        // Event listeners
+        document.getElementById('convertDropdown').addEventListener('change', (e) => {
+            handleConversion(e.target.value);
+        });
+
+        document.getElementById('undoBtn').addEventListener('click', undoConversion);
+        document.getElementById('loadSample').addEventListener('click', loadSampleJSON);
+
+        // Load sample on page load and demonstrate conversion
+        loadSampleJSON();
+        
+        // Auto-demonstrate YAML conversion after 2 seconds
+        setTimeout(() => {
+            handleConversion('yaml');
+        }, 2000);
+    </script>
+</body>
+</html>

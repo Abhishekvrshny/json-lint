@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Type Generator Test</title>
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="compact-header">
+            <div class="header-left">
+                <h1 class="title">Type Generator Test</h1>
+            </div>
+            <div class="header-controls">
+                <button id="generateTypesBtn" class="btn btn-secondary" title="Generate types">
+                    <span class="btn-icon">🔧</span>
+                    Types
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="editor-container">
+                <textarea id="jsonEditor" placeholder="Paste your JSON here..." style="width: 100%; height: 400px; font-family: monospace;">
+{
+  "fruits": [
+    {
+      "name": "Apple",
+      "color": "Red",
+      "nutrients": {
+        "calories": 52,
+        "fiber": "2.4g",
+        "vitaminC": "4.6mg"
+      }
+    },
+    {
+      "name": "Banana",
+      "color": "Yellow",
+      "nutrients": {
+        "calories": 89,
+        "fiber": "2.6g",
+        "potassium": "358mg"
+      }
+    }
+  ]
+}
+                </textarea>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Type Generators -->
+    <script src="js/generators/typescript.js"></script>
+    <script src="js/generators/go.js"></script>
+    <script src="js/generators/kotlin.js"></script>
+    <script src="js/generators/rust.js"></script>
+    <script src="js/generators/jsonSchema.js"></script>
+    <!-- UI Components -->
+    <script src="js/ui/typeGenerator.js"></script>
+
+    <script>
+        // Simple UI manager for testing
+        class SimpleUIManager {
+            getValue() {
+                return document.getElementById('jsonEditor').value;
+            }
+            
+            showToast(message, type = 'success') {
+                alert(`${type.toUpperCase()}: ${message}`);
+            }
+        }
+
+        // Initialize
+        const ui = new SimpleUIManager();
+        const typeGenerator = new TypeGeneratorManager(ui);
+
+        // Bind event
+        document.getElementById('generateTypesBtn').addEventListener('click', () => {
+            console.log('Types button clicked');
+            typeGenerator.showTypeGeneratorModal();
+        });
+
+        console.log('Test page loaded');
+    </script>
+</body>
+</html>

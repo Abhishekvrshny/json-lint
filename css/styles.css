@@ -206,6 +206,8 @@ body {
     border: 1px solid var(--border-color);
     background-color: var(--bg-primary);
     height: 1.75rem;
+    margin: 0 0.25rem;
+    flex-shrink: 0;
 }
 
 .checkbox-container:hover {
@@ -251,6 +253,41 @@ body {
     font-weight: 500;
     color: var(--text-primary);
     cursor: pointer;
+}
+
+/* Conversion controls styling */
+.conversion-controls {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.convert-dropdown {
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    height: 1.75rem;
+    min-width: 100px;
+}
+
+.convert-dropdown:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.convert-dropdown:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.convert-dropdown option {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 /* Main content - Full height editor */
@@ -498,6 +535,319 @@ body {
     }
 }
 
+/* Tree Mode Styles */
+/* Split view for tree mode */
+.editor-container.tree-mode {
+    display: flex;
+    flex-direction: row;
+}
+
+.editor-panel, .tree-panel {
+    flex: 1;
+    overflow: auto;
+    height: 100%;
+}
+
+.editor-panel {
+    border-right: 1px solid var(--border-color);
+}
+
+.tree-panel {
+    background-color: var(--bg-secondary);
+    padding: 0.5rem;
+}
+
+.tree-panel.hidden {
+    display: none;
+}
+
+/* Tree view styling */
+.tree-view {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.tree-node {
+    margin: 2px 0;
+    padding: 2px 0;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--border-radius);
+}
+
+.tree-node-content:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.tree-node-content.selected {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.tree-toggle {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    line-height: 16px;
+    margin-right: 4px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: bold;
+}
+
+.tree-key {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.tree-colon {
+    margin-right: 4px;
+}
+
+.tree-value {
+    color: var(--text-primary);
+}
+
+.tree-value-string {
+    color: #008000;
+}
+
+.tree-value-number {
+    color: #d73a49;
+}
+
+.tree-value-boolean {
+    color: #e36209;
+}
+
+.tree-value-null {
+    color: #e36209;
+    font-style: italic;
+}
+
+.tree-value-array, .tree-value-object {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.tree-children {
+    padding-left: 20px;
+}
+
+.tree-children.hidden {
+    display: none;
+}
+
+.tree-error {
+    color: var(--error-color);
+    font-style: italic;
+    padding: 1rem;
+}
+
+/* Dark theme tree value colors */
+[data-theme="dark"] .tree-value-string {
+    color: #a5d6ff;
+}
+
+[data-theme="dark"] .tree-value-number {
+    color: #ff7b72;
+}
+
+[data-theme="dark"] .tree-value-boolean,
+[data-theme="dark"] .tree-value-null {
+    color: #ffa657;
+}
+
+/* Line highlighting for tree node selection */
+.CodeMirror .highlighted-line {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border-left: 3px solid #3b82f6 !important;
+}
+
+[data-theme="dark"] .CodeMirror .highlighted-line {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+    border-left: 3px solid #60a5fa !important;
+}
+
+/* Text highlighting for tree node selection */
+.CodeMirror .highlighted-line-text {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    border-radius: 2px;
+}
+
+[data-theme="dark"] .CodeMirror .highlighted-line-text {
+    background-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Ensure highlighting is visible over other styles */
+.CodeMirror-line .highlighted-line-text {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+[data-theme="dark"] .CodeMirror-line .highlighted-line-text {
+    background-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Type Generator Modal Styles */
+.type-generator-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.type-generator-content {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    width: 90vw;
+    max-width: 800px;
+    height: 80vh;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-out;
+}
+
+.type-generator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.type-generator-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.type-generator-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.language-selector {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 180px;
+}
+
+.language-selector:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.language-selector:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.language-selector option {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.type-generator-output {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.generated-type-code {
+    flex: 1;
+    margin: 0;
+    padding: 1rem;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: none;
+    outline: none;
+}
+
+.generated-type-code.error {
+    color: var(--error-color);
+    font-style: italic;
+}
+
+/* Language-specific syntax highlighting for generated code */
+.generated-type-code.language-typescript,
+.generated-type-code.language-typescript-combined {
+    color: var(--text-primary);
+}
+
+.generated-type-code.language-go {
+    color: var(--text-primary);
+}
+
+.generated-type-code.language-kotlin {
+    color: var(--text-primary);
+}
+
+.generated-type-code.language-rust {
+    color: var(--text-primary);
+}
+
+.generated-type-code.language-json-schema {
+    color: var(--text-primary);
+}
+
+/* Modal animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .compact-header {
@@ -509,5 +859,33 @@ body {
     
     .header-left {
         justify-content: center;
+    }
+    
+    /* Stack tree mode vertically on mobile */
+    .editor-container.tree-mode {
+        flex-direction: column;
+    }
+    
+    .editor-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    /* Type generator modal responsive */
+    .type-generator-content {
+        width: 95vw;
+        height: 90vh;
+        margin: 1rem;
+    }
+    
+    .type-generator-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .language-selector {
+        min-width: auto;
+        width: 100%;
     }
 }

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tree Mode Disable on Conversion</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Test: Tree Mode Disable on Conversion</h1>
+        
+        <div style="margin: 20px 0;">
+            <h2>Test Steps:</h2>
+            <ol>
+                <li>Load sample JSON</li>
+                <li>Enable tree mode</li>
+                <li>Convert to YAML</li>
+                <li>Verify tree mode is disabled</li>
+            </ol>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <button id="loadSample">1. Load Sample JSON</button>
+            <button id="enableTree">2. Enable Tree Mode</button>
+            <button id="convertYaml">3. Convert to YAML</button>
+            <button id="checkTreeMode">4. Check Tree Mode Status</button>
+            <button id="enableTreeAgain">5. Enable Tree Mode Again</button>
+            <button id="undoConversion">6. Undo Conversion</button>
+            <button id="checkTreeModeAfterUndo">7. Check Tree Mode After Undo</button>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label>
+                <input type="checkbox" id="treeModeToggle">
+                Tree Mode
+            </label>
+            <select id="convertDropdown">
+                <option value="">Convert to...</option>
+                <option value="yaml">YAML</option>
+                <option value="toml">TOML</option>
+                <option value="xml">XML</option>
+            </select>
+        </div>
+
+        <div class="editor-container" id="editorContainer">
+            <div class="editor-panel" id="editorPanel">
+                <textarea id="jsonEditor" placeholder="JSON will appear here..."></textarea>
+            </div>
+            <div class="tree-panel hidden" id="treePanel">
+                <div class="tree-view" id="jsonTreeView"></div>
+            </div>
+        </div>
+
+        <div id="status" style="margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+            Status: Ready
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="js/linter.js"></script>
+    <script src="js/ui/theme.js"></script>
+    <script src="js/ui/editor.js"></script>
+    <script src="js/ui/format.js"></script>
+    <script src="js/ui/conversion.js"></script>
+    <script src="js/ui/tree.js"></script>
+    <script src="js/ui/font.js"></script>
+    <script src="js/ui/events.js"></script>
+    <script src="js/ui/core.js"></script>
+
+    <script>
+        // Initialize the application
+        let ui;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            ui = new UIManager();
+            ui.initialize();
+            
+            // Test buttons
+            document.getElementById('loadSample').addEventListener('click', () => {
+                const sampleJSON = {
+                    "name": "John Doe",
+                    "age": 30,
+                    "email": "john.doe@example.com",
+                    "address": {
+                        "street": "123 Main St",
+                        "city": "New York",
+                        "zipCode": "10001"
+                    },
+                    "hobbies": ["reading", "swimming", "coding"]
+                };
+                ui.setValue(JSON.stringify(sampleJSON, null, 2));
+                updateStatus('Sample JSON loaded');
+            });
+            
+            document.getElementById('enableTree').addEventListener('click', () => {
+                if (!ui.treeMode) {
+                    ui.treeManager.toggleTreeMode();
+                    document.getElementById('treeModeToggle').checked = true;
+                    updateStatus('Tree mode enabled');
+                } else {
+                    updateStatus('Tree mode already enabled');
+                }
+            });
+            
+            document.getElementById('convertYaml').addEventListener('click', () => {
+                const wasTreeModeEnabled = ui.treeMode;
+                ui.conversionManager.handleConversion('yaml');
+                const isTreeModeEnabled = ui.treeMode;
+                updateStatus(`Converted to YAML. Tree mode was: ${wasTreeModeEnabled}, now: ${isTreeModeEnabled}`);
+            });
+            
+            document.getElementById('checkTreeMode').addEventListener('click', () => {
+                const treeModeStatus = ui.treeMode;
+                const checkboxStatus = document.getElementById('treeModeToggle').checked;
+                updateStatus(`Tree mode status: ${treeModeStatus}, Checkbox: ${checkboxStatus}`);
+            });
+            
+            document.getElementById('enableTreeAgain').addEventListener('click', () => {
+                if (!ui.treeMode) {
+                    ui.treeManager.toggleTreeMode();
+                    document.getElementById('treeModeToggle').checked = true;
+                    updateStatus('Tree mode enabled again (after conversion)');
+                } else {
+                    updateStatus('Tree mode already enabled');
+                }
+            });
+            
+            document.getElementById('undoConversion').addEventListener('click', () => {
+                const wasTreeModeEnabled = ui.treeMode;
+                ui.conversionManager.undoConversion();
+                const isTreeModeEnabled = ui.treeMode;
+                updateStatus(`Undid conversion. Tree mode was: ${wasTreeModeEnabled}, now: ${isTreeModeEnabled}`);
+            });
+            
+            document.getElementById('checkTreeModeAfterUndo').addEventListener('click', () => {
+                const treeModeStatus = ui.treeMode;
+                const checkboxStatus = document.getElementById('treeModeToggle').checked;
+                updateStatus(`After undo - Tree mode: ${treeModeStatus}, Checkbox: ${checkboxStatus}`);
+            });
+        });
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = 'Status: ' + message;
+            console.log('Status:', message);
+        }
+    </script>
+</body>
+</html>

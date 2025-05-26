@@ -72,29 +72,13 @@ class JSONLinter {
     }
 
     /**
-     * Parse json-parse-better-errors error for enhanced error messages
+     * Parse and format error messages from json-parse-better-errors
      * @param {Error} error - The error object from json-parse-better-errors
      * @param {string} jsonString - The original JSON string
      * @returns {string} - Formatted error message
      */
     parseBetterError(error, jsonString) {
-        let message = error.message || 'Parse error';
-        
-        // json-parse-better-errors provides excellent location information
-        if (error.line !== undefined && error.column !== undefined) {
-            const line = error.line;
-            const column = error.column;
-            
-            // Get the actual line content for context
-            const lines = jsonString.split('\n');
-            const lineContent = lines[line - 1] || '';
-            const contextStart = Math.max(0, column - 25);
-            const contextEnd = Math.min(lineContent.length, column + 25);
-            const context = lineContent.substring(contextStart, contextEnd);
-            const pointer = ' '.repeat(Math.max(0, column - contextStart - 1)) + '^';
-            
-            return `Parse error at line ${line}, column ${column}: ${message}\n\nContext:\n${context}\n${pointer}`;
-        }
+        let message = error.message;
         
         // If we have offset information, convert to line/column
         if (error.offset !== undefined || error.index !== undefined) {
@@ -128,82 +112,6 @@ class JSONLinter {
         const column = lines[lines.length - 1].length + 1;
         
         return { line, column };
-    }
-
-    /**
-     * Format JSON with proper indentation
-     */
-    format(jsonString, indent = 2) {
-        try {
-            if (!jsonString || !jsonString.trim()) {
-                return {
-                    success: false,
-                    errors: ['Input is empty']
-                };
-            }
-
-            // Use our validate method to parse the JSON
-            const validationResult = this.validate(jsonString);
-            if (!validationResult.isValid) {
-                return {
-                    success: false,
-                    errors: validationResult.errors,
-                    formatted: null
-                };
-            }
-
-            const formatted = JSON.stringify(validationResult.data, null, indent);
-            
-            return {
-                success: true,
-                formatted: formatted,
-                errors: []
-            };
-        } catch (error) {
-            return {
-                success: false,
-                errors: [this.formatError(error)],
-                formatted: null
-            };
-        }
-    }
-
-    /**
-     * Compress/minify JSON by removing whitespace
-     */
-    compress(jsonString) {
-        try {
-            if (!jsonString || !jsonString.trim()) {
-                return {
-                    success: false,
-                    errors: ['Input is empty']
-                };
-            }
-
-            // Use our validate method to parse the JSON
-            const validationResult = this.validate(jsonString);
-            if (!validationResult.isValid) {
-                return {
-                    success: false,
-                    errors: validationResult.errors,
-                    compressed: null
-                };
-            }
-
-            const compressed = JSON.stringify(validationResult.data);
-            
-            return {
-                success: true,
-                compressed: compressed,
-                errors: []
-            };
-        } catch (error) {
-            return {
-                success: false,
-                errors: [this.formatError(error)],
-                compressed: null
-            };
-        }
     }
 
     /**
@@ -286,86 +194,404 @@ class JSONLinter {
     }
 
     /**
+     * Format JSON with proper indentation
+     */
+    format(jsonString, indent = 2) {
+        try {
+            if (!jsonString || !jsonString.trim()) {
+                return {
+                    success: false,
+                    errors: ['Input is empty']
+                };
+            }
+
+            // Use our validate method to parse the JSON
+            const validationResult = this.validate(jsonString);
+            if (!validationResult.isValid) {
+                return {
+                    success: false,
+                    errors: validationResult.errors,
+                    formatted: null
+                };
+            }
+
+            const formatted = JSON.stringify(validationResult.data, null, indent);
+            
+            return {
+                success: true,
+                formatted: formatted,
+                errors: []
+            };
+        } catch (error) {
+            return {
+                success: false,
+                errors: [this.formatError(error)],
+                formatted: null
+            };
+        }
+    }
+
+    /**
+     * Compress/minify JSON by removing whitespace
+     */
+    compress(jsonString) {
+        try {
+            if (!jsonString || !jsonString.trim()) {
+                return {
+                    success: false,
+                    errors: ['Input is empty']
+                };
+            }
+
+            // Use our validate method to parse the JSON
+            const validationResult = this.validate(jsonString);
+            if (!validationResult.isValid) {
+                return {
+                    success: false,
+                    errors: validationResult.errors,
+                    compressed: null
+                };
+            }
+
+            const compressed = JSON.stringify(validationResult.data);
+            
+            return {
+                success: true,
+                compressed: compressed,
+                errors: []
+            };
+        } catch (error) {
+            return {
+                success: false,
+                errors: [this.formatError(error)],
+                compressed: null
+            };
+        }
+    }
+
+    /**
+     * Get statistics about the JSON content
+     * @param {string} jsonString - The JSON string to analyze
+     * @returns {Object} Statistics object
+     */
+    getStats(jsonString) {
+        const stats = {
+            size: jsonString.length,
+            sizeFormatted: this.formatBytes(jsonString.length),
+            lines: jsonString.split('\n').length,
+            characters: jsonString.length
+        };
+
+        try {
+            const parsed = JSON.parse(jsonString);
+            stats.keys = this.countKeys(parsed);
+            stats.depth = this.getDepth(parsed);
+        } catch (error) {
+            stats.keys = 0;
+            stats.depth = 0;
+        }
+
+        return stats;
+    }
+
+    /**
+     * Convert JSON to YAML format
+     * @param {string} jsonString - The JSON string to convert
+     * @returns {Object} Result object with success status and converted content or errors
+     */
+    convertToYAML(jsonString) {
+        // Use our validate method for consistent error handling
+        const validationResult = this.validate(jsonString);
+        if (!validationResult.isValid) {
+            return {
+                success: false,
+                errors: validationResult.errors
+            };
+        }
+
+        try {
+            const jsonData = validationResult.data;
+            
+            // Check if js-yaml library is available
+            if (typeof jsyaml !== 'undefined') {
+                const yamlString = jsyaml.dump(jsonData, {
+                    indent: 2,
+                    lineWidth: -1,
+                    noRefs: true,
+                    sortKeys: false
+                });
+                return {
+                    success: true,
+                    converted: yamlString
+                };
+            } else {
+                // Fallback to simple YAML converter
+                const yamlString = this.simpleYAMLConverter(jsonData);
+                return {
+                    success: true,
+                    converted: yamlString
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                errors: [error.message]
+            };
+        }
+    }
+
+    /**
+     * Convert JSON to TOML format
+     * @param {string} jsonString - The JSON string to convert
+     * @returns {Object} Result object with success status and converted content or errors
+     */
+    convertToTOML(jsonString) {
+        // Use our validate method for consistent error handling
+        const validationResult = this.validate(jsonString);
+        if (!validationResult.isValid) {
+            return {
+                success: false,
+                errors: validationResult.errors
+            };
+        }
+
+        try {
+            const jsonData = validationResult.data;
+            
+            // Check if TOML library is available
+            if (typeof TOML !== 'undefined' && TOML.stringify) {
+                const tomlString = TOML.stringify(jsonData);
+                return {
+                    success: true,
+                    converted: tomlString
+                };
+            } else {
+                // Fallback to simple TOML converter
+                const tomlString = this.simpleTOMLConverter(jsonData);
+                return {
+                    success: true,
+                    converted: tomlString
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                errors: [error.message]
+            };
+        }
+    }
+
+    /**
+     * Convert JSON to CSV format
+     * @param {string} jsonString - The JSON string to convert
+     * @returns {Object} Result object with success status and converted content or errors
+     */
+    convertToCSV(jsonString) {
+        // Use our validate method for consistent error handling
+        const validationResult = this.validate(jsonString);
+        if (!validationResult.isValid) {
+            return {
+                success: false,
+                errors: validationResult.errors
+            };
+        }
+
+        try {
+            const jsonData = validationResult.data;
+            
+            // Check if Papa Parse library is available
+            if (typeof Papa !== 'undefined') {
+                if (Array.isArray(jsonData) && jsonData.length > 0 && typeof jsonData[0] === 'object') {
+                    const csvString = Papa.unparse(jsonData);
+                    return {
+                        success: true,
+                        converted: csvString
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errors: ['CSV conversion requires an array of objects']
+                    };
+                }
+            } else {
+                // Fallback to simple CSV converter
+                const csvString = this.simpleCSVConverter(jsonData);
+                return {
+                    success: true,
+                    converted: csvString
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                errors: [error.message]
+            };
+        }
+    }
+
+    /**
+     * Convert JSON to XML format
+     * @param {string} jsonString - The JSON string to convert
+     * @returns {Object} Result object with success status and converted content or errors
+     */
+    convertToXML(jsonString) {
+        // Use our validate method for consistent error handling
+        const validationResult = this.validate(jsonString);
+        if (!validationResult.isValid) {
+            return {
+                success: false,
+                errors: validationResult.errors
+            };
+        }
+
+        try {
+            const jsonData = validationResult.data;
+            const xmlString = this.simpleXMLConverter(jsonData);
+            return {
+                success: true,
+                converted: xmlString
+            };
+        } catch (error) {
+            return {
+                success: false,
+                errors: [error.message]
+            };
+        }
+    }
+
+    /**
+     * Simple YAML converter (fallback implementation)
+     * @param {*} obj - The object to convert
+     * @param {number} indent - Current indentation level
+     * @returns {string} YAML string
+     */
+    simpleYAMLConverter(obj, indent = 0) {
+        const spaces = '  '.repeat(indent);
+        let yaml = '';
+        
+        if (Array.isArray(obj)) {
+            obj.forEach(item => {
+                if (typeof item === 'object' && item !== null) {
+                    yaml += spaces + '-\n' + this.simpleYAMLConverter(item, indent + 1);
+                } else {
+                    yaml += spaces + '- ' + (typeof item === 'string' ? `"${item}"` : item) + '\n';
+                }
+            });
+        } else if (typeof obj === 'object' && obj !== null) {
+            Object.keys(obj).forEach(key => {
+                const value = obj[key];
+                if (typeof value === 'object' && value !== null) {
+                    yaml += spaces + key + ':\n' + this.simpleYAMLConverter(value, indent + 1);
+                } else {
+                    yaml += spaces + key + ': ' + (typeof value === 'string' ? `"${value}"` : value) + '\n';
+                }
+            });
+        }
+        
+        return yaml;
+    }
+
+    /**
+     * Simple TOML converter (fallback implementation)
+     * @param {*} obj - The object to convert
+     * @returns {string} TOML string
+     */
+    simpleTOMLConverter(obj) {
+        let toml = '';
+        
+        if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+            Object.keys(obj).forEach(key => {
+                const value = obj[key];
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    toml += `\n[${key}]\n`;
+                    Object.keys(value).forEach(subKey => {
+                        const subValue = value[subKey];
+                        if (typeof subValue !== 'object') {
+                            toml += `${subKey} = ${typeof subValue === 'string' ? `"${subValue}"` : subValue}\n`;
+                        }
+                    });
+                } else if (Array.isArray(value)) {
+                    toml += `${key} = [${value.map(v => typeof v === 'string' ? `"${v}"` : v).join(', ')}]\n`;
+                } else {
+                    toml += `${key} = ${typeof value === 'string' ? `"${value}"` : value}\n`;
+                }
+            });
+        } else {
+            toml = 'TOML conversion requires a top-level object';
+        }
+        
+        return toml;
+    }
+
+    /**
+     * Simple CSV converter (fallback implementation)
+     * @param {*} obj - The object to convert
+     * @returns {string} CSV string
+     */
+    simpleCSVConverter(obj) {
+        if (Array.isArray(obj) && obj.length > 0 && typeof obj[0] === 'object') {
+            const headers = Object.keys(obj[0]);
+            let csv = headers.join(',') + '\n';
+            
+            obj.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header];
+                    return typeof value === 'string' ? `"${value}"` : value;
+                });
+                csv += values.join(',') + '\n';
+            });
+            
+            return csv;
+        } else {
+            return 'CSV conversion only supports arrays of objects';
+        }
+    }
+
+    /**
+     * Simple XML converter
+     * @param {*} obj - The object to convert
+     * @param {string} rootName - Root element name
+     * @returns {string} XML string
+     */
+    simpleXMLConverter(obj, rootName = 'root') {
+        function objectToXML(obj, indent = 0) {
+            const spaces = '  '.repeat(indent);
+            let xml = '';
+            
+            if (Array.isArray(obj)) {
+                obj.forEach((item, index) => {
+                    xml += spaces + `<item${index}>\n`;
+                    if (typeof item === 'object' && item !== null) {
+                        xml += objectToXML(item, indent + 1);
+                    } else {
+                        xml += spaces + '  ' + item + '\n';
+                    }
+                    xml += spaces + `</item${index}>\n`;
+                });
+            } else if (typeof obj === 'object' && obj !== null) {
+                Object.keys(obj).forEach(key => {
+                    const value = obj[key];
+                    xml += spaces + `<${key}>\n`;
+                    if (typeof value === 'object' && value !== null) {
+                        xml += objectToXML(value, indent + 1);
+                    } else {
+                        xml += spaces + '  ' + value + '\n';
+                    }
+                    xml += spaces + `</${key}>\n`;
+                });
+            }
+            
+            return xml;
+        }
+        
+        return `<?xml version="1.0" encoding="UTF-8"?>\n<${rootName}>\n${objectToXML(obj, 1)}</${rootName}>`;
+    }
+
+    /**
      * Format error for consistent display
      */
     formatError(error) {
         return error.message || 'Unknown error occurred';
-    }
-
-    /**
-     * Convert character position to line number (legacy method)
-     */
-    getLineFromPosition(text, position) {
-        if (position <= 0) return 1;
-        
-        const beforeError = text.substring(0, position);
-        const lines = beforeError.split('\n');
-        return lines.length;
-    }
-
-    /**
-     * Get JSON statistics
-     * @param {string} jsonString - The JSON string to analyze
-     * @returns {Object} - Statistics about the JSON
-     */
-    getStats(jsonString) {
-        if (!jsonString || jsonString.trim() === '') {
-            return {
-                size: 0,
-                sizeFormatted: '0 Bytes',
-                characters: 0,
-                lines: 0,
-                valid: false
-            };
-        }
-
-        const lines = jsonString.split('\n').length;
-        const characters = jsonString.length;
-        const bytes = new Blob([jsonString]).size;
-        
-        return {
-            size: bytes,
-            sizeFormatted: this.formatBytes(bytes),
-            characters: characters,
-            lines: lines,
-            valid: this.validate(jsonString).isValid
-        };
-    }
-
-    /**
-     * Get the type of JSON data
-     * @param {*} data - The parsed JSON data
-     * @returns {string} - Type description
-     */
-    getJSONType(data) {
-        if (data === null) return 'null';
-        if (Array.isArray(data)) return 'array';
-        if (typeof data === 'object') return 'object';
-        if (typeof data === 'string') return 'string';
-        if (typeof data === 'number') return 'number';
-        if (typeof data === 'boolean') return 'boolean';
-        return 'unknown';
-    }
-
-    /**
-     * Calculate maximum depth of nested JSON
-     * @param {*} obj - The JSON object to analyze
-     * @returns {number} - Maximum depth
-     */
-    getMaxDepth(obj) {
-        if (obj === null || typeof obj !== 'object') {
-            return 0;
-        }
-        
-        let maxDepth = 0;
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                const depth = this.getMaxDepth(obj[key]);
-                maxDepth = Math.max(maxDepth, depth);
-            }
-        }
-        
-        return maxDepth + 1;
     }
 
     /**
@@ -381,6 +607,58 @@ class JSONLinter {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    /**
+     * Count keys in an object recursively
+     * @param {*} obj - The object to count keys in
+     * @returns {number} - Total number of keys
+     */
+    countKeys(obj) {
+        if (typeof obj !== 'object' || obj === null) {
+            return 0;
+        }
+        
+        let count = 0;
+        if (Array.isArray(obj)) {
+            count = obj.length;
+            obj.forEach(item => {
+                count += this.countKeys(item);
+            });
+        } else {
+            count = Object.keys(obj).length;
+            Object.values(obj).forEach(value => {
+                count += this.countKeys(value);
+            });
+        }
+        
+        return count;
+    }
+
+    /**
+     * Get the depth of nested objects
+     * @param {*} obj - The object to analyze
+     * @returns {number} - Maximum depth
+     */
+    getDepth(obj) {
+        if (typeof obj !== 'object' || obj === null) {
+            return 0;
+        }
+        
+        let maxDepth = 0;
+        if (Array.isArray(obj)) {
+            obj.forEach(item => {
+                const depth = this.getDepth(item);
+                maxDepth = Math.max(maxDepth, depth);
+            });
+        } else {
+            Object.values(obj).forEach(value => {
+                const depth = this.getDepth(value);
+                maxDepth = Math.max(maxDepth, depth);
+            });
+        }
+        
+        return maxDepth + 1;
     }
 
     /**

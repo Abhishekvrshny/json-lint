@@ -12,6 +12,10 @@ class UIManager {
         this.fontSize = 14; // Default font size in pixels
         this.minFontSize = 10;
         this.maxFontSize = 24;
+        this.treeMode = false;
+        this.treeNodeMap = new Map(); // Maps tree nodes to editor line numbers
+        this.originalContent = ''; // Store original JSON for undo functionality
+        this.currentFormat = 'json'; // Track current format
         
         this.initializeTheme();
         this.initializeFontSize();
@@ -103,6 +107,12 @@ class UIManager {
             compressToggle.addEventListener('change', () => this.toggleCompression());
         }
 
+        // Tree mode toggle checkbox
+        const treeModeToggle = document.getElementById('treeModeToggle');
+        if (treeModeToggle) {
+            treeModeToggle.addEventListener('change', () => this.toggleTreeMode());
+        }
+
         // Copy button
         const copyBtn = document.getElementById('copyBtn');
         if (copyBtn) {
@@ -130,6 +140,18 @@ class UIManager {
         const closeErrorBtn = document.getElementById('closeErrorBtn');
         if (closeErrorBtn) {
             closeErrorBtn.addEventListener('click', () => this.hideErrorPanel());
+        }
+
+        // Conversion dropdown
+        const convertDropdown = document.getElementById('convertDropdown');
+        if (convertDropdown) {
+            convertDropdown.addEventListener('change', (e) => this.handleConversion(e.target.value));
+        }
+
+        // Undo button
+        const undoBtn = document.getElementById('undoBtn');
+        if (undoBtn) {
+            undoBtn.addEventListener('click', () => this.undoConversion());
         }
 
         // Keyboard shortcuts
@@ -170,8 +192,8 @@ class UIManager {
      */
     initializeTheme() {
         const savedTheme = localStorage.getItem('json-lint-theme');
-        this.isDarkMode = savedTheme === 'dark' || 
-            (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        // Default to dark theme if no saved preference exists
+        this.isDarkMode = savedTheme === 'dark' || !savedTheme;
         this.applyTheme();
     }
 
@@ -238,6 +260,10 @@ class UIManager {
     loadSampleJSON() {
         const sampleJSON = JSONLinter.getSampleJSON();
         this.setValue(sampleJSON);
+        
+        // Reset to JSON format when loading sample
+        this.resetToJSONFormat();
+        
         this.validateJSON();
         this.showToast('Sample JSON loaded', 'success');
     }
@@ -252,6 +278,14 @@ class UIManager {
         this.updateStatus('');
         this.updateStats();
         
+        // Reset format to JSON and enable validation controls
+        this.resetToJSONFormat();
+        
+        // Clear tree view if tree mode is enabled
+        if (this.treeMode) {
+            this.refreshTreeView();
+        }
+        
         if (this.jsonEditor) {
             this.jsonEditor.focus();
         }
@@ -260,9 +294,26 @@ class UIManager {
     }
 
     /**
+     * Reset to JSON format and enable all controls
+     */
+    resetToJSONFormat() {
+        this.currentFormat = 'json';
+        this.updateEditorMode('json');
+        this.enableValidationControls();
+        this.hideUndoButton();
+        this.resetConversionDropdown();
+        this.originalContent = '';
+    }
+
+    /**
      * Format JSON with validation
      */
     formatJSON() {
+        if (this.currentFormat !== 'json') {
+            this.showToast('Format is only available for JSON content', 'error');
+            return;
+        }
+
         const input = this.getValue();
         const linter = new JSONLinter();
         const result = linter.format(input);
@@ -274,6 +325,11 @@ class UIManager {
             this.clearErrorHighlights();
             this.updateStats();
             this.showToast('JSON formatted successfully', 'success');
+            
+            // Refresh tree view if tree mode is enabled
+            if (this.treeMode) {
+                this.refreshTreeView();
+            }
         } else {
             this.showErrors(result.errors);
             this.updateStatus('✗ Invalid JSON', 'invalid');
@@ -285,6 +341,11 @@ class UIManager {
      * Validate JSON without formatting
      */
     validateJSON() {
+        if (this.currentFormat !== 'json') {
+            this.showToast('Validation is only available for JSON content', 'error');
+            return;
+        }
+
         const input = this.getValue();
         const linter = new JSONLinter();
         const result = linter.validate(input);
@@ -294,6 +355,11 @@ class UIManager {
             this.hideErrorPanel();
             this.clearErrorHighlights();
             this.showToast('JSON is valid', 'success');
+            
+            // Refresh tree view if tree mode is enabled
+            if (this.treeMode) {
+                this.refreshTreeView();
+            }
         } else {
             this.updateStatus('✗ Invalid JSON', 'invalid');
             this.showErrors(result.errors);
@@ -307,6 +373,13 @@ class UIManager {
      * Toggle between compressed and formatted JSON based on checkbox state
      */
     toggleCompression() {
+        if (this.currentFormat !== 'json') {
+            this.showToast('Compression is only available for JSON content', 'error');
+            const compressToggle = document.getElementById('compressToggle');
+            if (compressToggle) compressToggle.checked = false;
+            return;
+        }
+
         const compressToggle = document.getElementById('compressToggle');
         const isCompressed = compressToggle && compressToggle.checked;
         
@@ -357,7 +430,7 @@ class UIManager {
      * Debounced validation for auto-validation
      */
     debounceValidation() {
-        if (!this.autoValidate) return;
+        if (!this.autoValidate || this.currentFormat !== 'json') return;
         
         clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(() => {
@@ -409,7 +482,7 @@ class UIManager {
     }
 
     /**
-     * Download JSON as file
+     * Download content as file
      */
     downloadJSON() {
         const content = this.getValue();
@@ -419,193 +492,12 @@ class UIManager {
             return;
         }
 
-        const blob = new Blob([content], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `json-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Determine file extension based on current format
+        let extension = 'json';
+        let mimeType = 'application/json';
         
-        this.showToast('JSON downloaded', 'success');
-    }
-
-    /**
-     * Show errors in status area instead of popup
-     */
-    showErrors(errors) {
-        // Don't show the popup panel, just show error in toast
-        if (errors && errors.length > 0) {
-            this.showToast(errors[0], 'error');
-        }
-    }
-
-    /**
-     * Hide error panel
-     */
-    hideErrorPanel() {
-        const errorPanel = document.getElementById('errorPanel');
-        if (errorPanel) {
-            errorPanel.classList.add('hidden');
-        }
-    }
-
-    /**
-     * Update status
-     */
-    updateStatus(message, type = '') {
-        const statusElement = document.getElementById('status');
-        if (statusElement) {
-            statusElement.textContent = message;
-            statusElement.className = `status ${type}`;
-        }
-    }
-
-    /**
-     * Update statistics
-     */
-    updateStats() {
-        const content = this.getValue();
-        const linter = new JSONLinter();
-        const stats = linter.getStats(content);
-        
-        const sizeElement = document.getElementById('size');
-        if (sizeElement) {
-            sizeElement.textContent = stats.sizeFormatted;
-        }
-    }
-
-    /**
-     * Highlight error lines in the editor
-     */
-    highlightErrorLines(errors, input) {
-        if (!this.jsonEditor) return;
-        
-        this.clearErrorHighlights();
-        
-        errors.forEach(error => {
-            // Look for line number in various formats
-            const lineMatch = error.match(/(?:line|Line)\s+(\d+)/i);
-            if (lineMatch) {
-                const lineNumber = parseInt(lineMatch[1]) - 1; // CodeMirror uses 0-based indexing
-                if (lineNumber >= 0 && lineNumber < this.jsonEditor.lineCount()) {
-                    this.jsonEditor.addLineClass(lineNumber, 'background', 'error-line');
-                }
-            }
-        });
-    }
-
-    /**
-     * Clear error highlights from the editor
-     */
-    clearErrorHighlights() {
-        if (!this.jsonEditor) return;
-        
-        const lineCount = this.jsonEditor.lineCount();
-        for (let i = 0; i < lineCount; i++) {
-            this.jsonEditor.removeLineClass(i, 'background', 'error-line');
-        }
-    }
-
-    /**
-     * Show toast notification
-     */
-    showToast(message, type = "success") {
-        // Remove existing toast
-        const existingToast = document.querySelector(".toast");
-        if (existingToast) {
-            existingToast.remove();
-        }
-
-        // Create new toast
-        const toast = document.createElement("div");
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        
-        document.body.appendChild(toast);
-        
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.classList.add("hidden");
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }
-        }, 3000);
-    }
-
-    /**
-     * Initialize font size from localStorage
-     */
-    initializeFontSize() {
-        const savedFontSize = localStorage.getItem("json-lint-font-size");
-        if (savedFontSize) {
-            this.fontSize = parseInt(savedFontSize);
-        }
-        this.applyFontSize();
-    }
-
-    /**
-     * Increase font size
-     */
-    increaseFontSize() {
-        if (this.fontSize < this.maxFontSize) {
-            this.fontSize += 2;
-            this.applyFontSize();
-            this.saveFontSize();
-            this.showToast(`Font size increased to ${this.fontSize}px`, "success");
-        } else {
-            this.showToast("Maximum font size reached", "warning");
-        }
-    }
-
-    /**
-     * Decrease font size
-     */
-    decreaseFontSize() {
-        if (this.fontSize > this.minFontSize) {
-            this.fontSize -= 2;
-            this.applyFontSize();
-            this.saveFontSize();
-            this.showToast(`Font size decreased to ${this.fontSize}px`, "success");
-        } else {
-            this.showToast("Minimum font size reached", "warning");
-        }
-    }
-
-    /**
-     * Apply font size to editor
-     */
-    applyFontSize() {
-        const fontSizeStyle = `${this.fontSize}px`;
-        
-        // Apply to CodeMirror editor
-        if (this.jsonEditor) {
-            this.jsonEditor.getWrapperElement().style.fontSize = fontSizeStyle;
-            this.jsonEditor.refresh();
-        }
-
-        // Apply to fallback textarea (in case CodeMirror isnt loaded)
-        const jsonTextarea = document.getElementById("jsonEditor");
-        if (jsonTextarea) {
-            jsonTextarea.style.fontSize = fontSizeStyle;
-        }
-    }
-
-    /**
-     * Save font size to localStorage
-     */
-    saveFontSize() {
-        localStorage.setItem("json-lint-font-size", this.fontSize.toString());
-    }
-}
-
-// Export for use in other modules
-if (typeof module !== "undefined" && module.exports) {
-    module.exports = UIManager;
-}
+        switch (this.currentFormat) {
+            case 'yaml':
+                extension = 'yaml';
+                mimeType = 'text/yaml';
+                break

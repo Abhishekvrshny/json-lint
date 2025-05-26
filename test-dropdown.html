@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropdown Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 150px;
+            margin: 10px;
+        }
+        .status {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dropdown Test</h1>
+        
+        <h3>Test 1: Basic HTML Select</h3>
+        <select id="basicSelect">
+            <option value="">Select format...</option>
+            <option value="yaml">YAML</option>
+            <option value="toml">TOML</option>
+            <option value="csv">CSV</option>
+            <option value="xml">XML</option>
+        </select>
+        
+        <h3>Test 2: Styled Select (like main app)</h3>
+        <select id="styledSelect" class="convert-dropdown">
+            <option value="">Convert to...</option>
+            <option value="yaml">YAML</option>
+            <option value="toml">TOML</option>
+            <option value="csv">CSV</option>
+            <option value="xml">XML</option>
+        </select>
+        
+        <div id="status" class="status">No selection made</div>
+    </div>
+
+    <style>
+        .convert-dropdown {
+            padding: 0.375rem 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            background-color: #ffffff;
+            color: #1f2937;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            height: 1.75rem;
+            min-width: 100px;
+        }
+
+        .convert-dropdown:hover {
+            background-color: #f1f5f9;
+        }
+
+        .convert-dropdown:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .convert-dropdown option {
+            background-color: #ffffff;
+            color: #1f2937;
+        }
+    </style>
+
+    <script>
+        const basicSelect = document.getElementById('basicSelect');
+        const styledSelect = document.getElementById('styledSelect');
+        const status = document.getElementById('status');
+        
+        function updateStatus(message) {
+            status.textContent = message;
+            console.log(message);
+        }
+        
+        basicSelect.addEventListener('change', (e) => {
+            updateStatus(`Basic select changed to: ${e.target.value || 'none'}`);
+        });
+        
+        styledSelect.addEventListener('change', (e) => {
+            updateStatus(`Styled select changed to: ${e.target.value || 'none'}`);
+        });
+        
+        // Test programmatic selection
+        setTimeout(() => {
+            updateStatus('Testing programmatic selection...');
+            basicSelect.value = 'yaml';
+            basicSelect.dispatchEvent(new Event('change'));
+        }, 2000);
+    </script>
+</body>
+</html>
