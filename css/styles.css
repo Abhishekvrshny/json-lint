@@ -193,6 +193,31 @@ body {
     line-height: 1;
 }
 
+/* GitHub link styling */
+.github-link {
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+    transition: var(--transition);
+}
+
+.github-link:hover {
+    color: var(--primary-color) !important;
+    background-color: var(--bg-tertiary);
+}
+
+.github-link svg {
+    transition: var(--transition);
+}
+
+.github-link:hover svg {
+    transform: scale(1.1);
+}
+
+/* Dark theme GitHub icon color */
+[data-theme="dark"] .github-link:hover {
+    color: #79c0ff !important;
+}
+
 /* Checkbox styling - Compact */
 .checkbox-container {
     display: flex;
