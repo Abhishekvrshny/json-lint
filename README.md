@@ -1,4 +1,6 @@
-# JSON Lint - Online JSON Validator and Formatter
+# JSON Tool - Online JSON Validator and Formatter
+
+[![GitHub Repository](https://img.shields.io/badge/GitHub-json--tool-blue?logo=github)](https://github.com/Abhishekvrshny/json-tool)
 
 A powerful, frontend-only JSON validation and formatting tool built with vanilla JavaScript. Perfect for developers who need to quickly validate, format, and work with JSON data.
 
@@ -17,7 +19,7 @@ A powerful, frontend-only JSON validation and formatting tool built with vanilla
 
 ## 🎯 Live Demo
 
-Visit the live application: [JSON Lint Tool](https://your-username.github.io/json-lint)
+Visit the live application: [JSON Tool](https://abhishekvrshny.github.io/json-tool)
 
 ## 🛠️ Usage
 
@@ -78,17 +80,30 @@ The application follows a modular architecture with three main components:
 ## 📁 Project Structure
 
 ```
-json-lint/
+json-tool/
 ├── index.html              # Main HTML file
 ├── css/
 │   └── styles.css          # Application styles
 ├── js/
 │   ├── main.js            # Application entry point
 │   ├── linter.js          # JSON validation logic
-│   └── ui.js              # UI management
-├── .github/
-│   └── workflows/
-│       └── deploy.yml     # GitHub Pages deployment
+│   ├── ui.js              # UI management
+│   ├── generators/        # Type generators for different languages
+│   │   ├── typescript.js
+│   │   ├── go.js
+│   │   ├── kotlin.js
+│   │   ├── rust.js
+│   │   └── jsonSchema.js
+│   └── ui/               # Modular UI components
+│       ├── conversion.js
+│       ├── core.js
+│       ├── editor.js
+│       ├── events.js
+│       ├── font.js
+│       ├── format.js
+│       ├── theme.js
+│       ├── tree.js
+│       └── typeGenerator.js
 ├── .gitignore             # Git ignore rules
 ├── LICENSE                # MIT License
 └── README.md              # This file
@@ -102,7 +117,7 @@ This project is configured for automatic deployment to GitHub Pages:
 
 1. Push your code to the `main` branch
 2. GitHub Actions will automatically deploy to GitHub Pages
-3. Your site will be available at `https://your-username.github.io/json-lint`
+3. Your site will be available at `https://abhishekvrshny.github.io/json-tool`
 
 ### Manual Deployment
 
@@ -116,8 +131,8 @@ Since this is a static site, you can deploy it anywhere:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/json-lint.git
-   cd json-lint
+   git clone https://github.com/Abhishekvrshny/json-tool.git
+   cd json-tool
    ```
 
 2. Open `index.html` in your browser or serve with a local server:
@@ -182,7 +197,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check the [Issues](https://github.com/your-username/json-lint/issues) page
+1. Check the [Issues](https://github.com/Abhishekvrshny/json-tool/issues) page
 2. Create a new issue if your problem isn't already reported
 3. Provide as much detail as possible, including browser version and steps to reproduce
 
