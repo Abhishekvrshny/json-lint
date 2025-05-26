@@ -26,9 +26,11 @@ class UIManager {
         this.fontManager = new FontManager(this);
         this.typeGeneratorManager = new TypeGeneratorManager(this);
         this.eventManager = new EventManager(this);
+        this.responsiveManager = new ResponsiveManager(this);
         
         this.themeManager.initialize();
         this.fontManager.initialize();
+        this.responsiveManager.initialize();
     }
 
     /**
