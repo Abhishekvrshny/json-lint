@@ -28,14 +28,11 @@ class FormatManager {
                     : JSON.stringify(result.data, null, 2);
                 
                 this.ui.setValue(formatted);
-                this.ui.updateStatus('JSON formatted successfully', 'success');
                 this.ui.showToast('JSON formatted successfully');
             } catch (error) {
-                this.ui.updateStatus('Format failed', 'error');
                 this.ui.showToast('Failed to format JSON', 'error');
             }
         } else {
-            this.ui.updateStatus(`Invalid JSON: ${result.errors[0]}`, 'error');
             this.ui.showErrors(result.errors);
         }
 
@@ -49,13 +46,11 @@ class FormatManager {
         const content = this.ui.getValue();
         
         if (!content.trim()) {
-            this.ui.updateStatus('Enter JSON to validate', '');
             return;
         }
 
         // Only validate if current format is JSON
         if (this.ui.currentFormat !== 'json') {
-            this.ui.updateStatus(`Content is in ${this.ui.currentFormat.toUpperCase()} format`, 'success');
             this.ui.updateStats();
             return;
         }
@@ -64,10 +59,9 @@ class FormatManager {
         const result = linter.validate(content);
 
         if (result.isValid) {
-            this.ui.updateStatus('JSON is valid', 'success');
             this.ui.editorManager.clearErrorHighlights();
+            this.ui.hideErrorPanel();
         } else {
-            this.ui.updateStatus(`Invalid JSON: ${result.errors[0]}`, 'error');
             this.ui.showErrors(result.errors);
             this.ui.editorManager.highlightErrorLine(result.errors[0]);
         }
@@ -126,7 +120,6 @@ class FormatManager {
 
         const formatted = JSON.stringify(sampleJSON, null, 2);
         this.ui.setValue(formatted);
-        this.ui.updateStatus('Sample JSON loaded', 'success');
         this.ui.showToast('Sample JSON loaded');
         this.ui.updateStats();
     }
@@ -136,7 +129,6 @@ class FormatManager {
      */
     clearInput() {
         this.ui.setValue('');
-        this.ui.updateStatus('Ready', '');
         this.ui.hideErrorPanel();
         this.ui.updateStats();
         this.ui.showToast('Input cleared');

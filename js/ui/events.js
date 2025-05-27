@@ -35,10 +35,20 @@ class EventManager {
             formatBtn.addEventListener('click', () => this.ui.formatManager.formatJSON());
         }
 
-        // Validate button
-        const validateBtn = document.getElementById('validateBtn');
-        if (validateBtn) {
-            validateBtn.addEventListener('click', () => this.ui.formatManager.validateJSON());
+        // Validate toggle checkbox
+        const validateToggle = document.getElementById('validateToggle');
+        if (validateToggle) {
+            validateToggle.addEventListener('change', (e) => {
+                this.ui.autoValidate = e.target.checked;
+                if (e.target.checked) {
+                    // Validate immediately when enabled
+                    this.ui.formatManager.validateJSON();
+                } else {
+                    // Clear validation when disabled
+                    this.ui.hideErrorPanel();
+                    this.ui.editorManager.clearErrorHighlights();
+                }
+            });
         }
 
         // Compress toggle checkbox

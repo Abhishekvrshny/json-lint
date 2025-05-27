@@ -17,12 +17,7 @@
     <div class="container">
         <header class="compact-header">
             <div class="header-left">
-                <h1 class="title">
-                    <span class="icon">📋</span>
-                    <a href="https://github.com/Abhishekvrshny/json-tool" target="_blank" style="text-decoration: none; color: inherit;">JSON Tool</a>
-                </h1>
                 <div class="status-info">
-                    <span id="status" class="status"></span>
                     <span id="size" class="size-info"></span>
                 </div>
             </div>
@@ -30,9 +25,10 @@
                 <button id="formatBtn" class="btn btn-primary" title="Format JSON">
                     <span class="btn-icon">✨</span>
                 </button>
-                <button id="validateBtn" class="btn btn-primary" title="Validate JSON">
-                    <span class="btn-icon">✓</span>
-                </button>
+                <label class="checkbox-container" title="Enable automatic JSON validation">
+                    <input type="checkbox" id="validateToggle">
+                    <span class="checkbox-label">Validate</span>
+                </label>
                 <label class="checkbox-container" title="Toggle between compressed and formatted JSON">
                     <input type="checkbox" id="compressToggle">
                     <span class="checkbox-label">Compress</span>

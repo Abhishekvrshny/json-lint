@@ -6,7 +6,7 @@ class UIManager {
     constructor() {
         this.jsonEditor = null;
         this.isDarkMode = false;
-        this.autoValidate = true;
+        this.autoValidate = false; // Start with validation disabled
         this.debounceTimer = null;
         this.debounceDelay = 500; // ms
         this.fontSize = 14; // Default font size in pixels
