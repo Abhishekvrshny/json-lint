@@ -218,6 +218,31 @@ body {
     color: #79c0ff !important;
 }
 
+/* Personal link styling */
+.personal-link {
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+    transition: var(--transition);
+}
+
+.personal-link:hover {
+    color: var(--primary-color) !important;
+    background-color: var(--bg-tertiary);
+}
+
+.personal-link svg {
+    transition: var(--transition);
+}
+
+.personal-link:hover svg {
+    transform: scale(1.1);
+}
+
+/* Dark theme personal link color */
+[data-theme="dark"] .personal-link:hover {
+    color: #79c0ff !important;
+}
+
 /* Checkbox styling - Compact */
 .checkbox-container {
     display: flex;
@@ -1057,7 +1082,8 @@ body {
         display: none;
     }
     
-    .github-link {
+    .github-link,
+    .personal-link {
         display: none;
     }
     
